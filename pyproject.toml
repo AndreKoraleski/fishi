@@ -1,0 +1,55 @@
+[project]
+name = "fishi"
+version = "0.1.0"
+description = "Preprocessing techniques for zero-shot segmentation on the fisheye WoodScape dataset"
+readme = "README.md"
+authors = [
+    { name = "ANDRE VINICIUS MOURA KORALESKI", email = "andre.andre2@discente.ufg.br" },
+    { name = "HENRICK DE SOUZA SILVA", email = "henrick.henrick@discente.ufg.br" },
+    { name = "CAIO LUCCA DOS SANTOS OLIVEIRA", email = "caiolucca@discente.ufg.br" },
+    { name = "LUCAS NOGUEIRA BARROSO", email = "lucas.nogueira@discente.ufg.br" },
+    { name = "RIAN DE SOUZA SANTOS", email = "rian.souza@discente.ufg.br" },
+]
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "gdown>=6.1.0",
+    "pydantic>=2.13.4",
+    "pydantic-settings>=2.14.2",
+    "structlog>=26.1.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/fishi"]
+
+[dependency-groups]
+dev = [
+    "mypy>=2.1.0",
+    "pre-commit>=4.6.0",
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.15.20",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "C4", "N"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--cov=fishi --cov-report=term-missing"
+
+[tool.mypy]
+python_version = "3.10"
+packages = ["fishi"]
+ignore_missing_imports = true
+
+[tool.coverage.run]
+source = ["fishi"]

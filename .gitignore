@@ -1,0 +1,45 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Tooling caches
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Data, datasets and models (anchored to repo root so they never match source dirs)
+/data/
+/datasets/
+*.h5
+*.hdf5
+*.npy
+*.npz
+*.pt
+*.pth
+*.ckpt
+*.onnx
+
+# Experiment outputs
+/outputs/
+/runs/
+/logs/
+wandb/
+mlruns/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
