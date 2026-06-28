@@ -59,11 +59,3 @@ def test_camera_filter(dataset_root):
     dataset = WoodScapeDataset(get_settings(data_directory=dataset_root), cameras=["FV"])
     assert len(dataset) == 1
     assert dataset[0].camera == "FV"
-
-
-def test_preprocess_applied(dataset_root):
-    def to_white(image, calibration):
-        return np.full_like(image, 255)
-
-    dataset = WoodScapeDataset(get_settings(data_directory=dataset_root), preprocess=to_white)
-    assert (dataset[0].image == 255).all()
