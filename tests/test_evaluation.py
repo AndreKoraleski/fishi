@@ -50,16 +50,16 @@ def test_evaluate_respects_batch_size_windows(make_sample, fake_dataset):
 
 
 def test_cache_writes_then_skips_reinference(tmp_path, make_sample, fake_dataset):
-    samples = [make_sample("a_FV"), make_sample("b_FV")]
+    samples = [make_sample("00000_FV"), make_sample("00001_RV")]
 
     first = CountingPipeline()
     run(Identity(), first, fake_dataset(samples), {1: "road"}, 10, cache_directory=tmp_path)
     assert first.calls == 2  # one view per sample
-    assert len(list(tmp_path.rglob("*.png"))) == 2
+    assert len(list(tmp_path.glob("*.npz"))) == 1  # one archive per cell
 
     second = CountingPipeline()
     result = run(
         Identity(), second, fake_dataset(samples), {1: "road"}, 10, cache_directory=tmp_path
     )
-    assert second.calls == 0  # everything served from cache
+    assert second.calls == 0  # whole cell served from the .npz
     assert "miou" in result
