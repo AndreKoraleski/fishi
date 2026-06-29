@@ -68,6 +68,9 @@ class SegmentationMetrics:
         """
         iou = self.per_class_iou()
         dice = self.per_class_dice()
+        if self.ignore_index is not None and 0 <= self.ignore_index < self.class_count:
+            iou[self.ignore_index] = np.nan
+            dice[self.ignore_index] = np.nan
         return {
             "iou": iou,
             "dice": dice,

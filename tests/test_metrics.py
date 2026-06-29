@@ -29,6 +29,15 @@ def test_ignore_index_excluded():
     assert result["miou"] == 1.0
 
 
+def test_ignore_index_class_dropped_from_mean():
+    # void (0) predicted as background must not earn a spurious 0 IoU that drags mIoU down.
+    metric = SegmentationMetrics(class_count=3, ignore_index=0)
+    metric.update(np.array([1, 0, 2]), np.array([1, 1, 2]))  # one class-1 pixel predicted as 0
+    result = metric.compute()
+    assert np.isnan(result["iou"][0])  # void excluded from the per-class report
+    np.testing.assert_allclose(result["miou"], 0.75)  # mean over classes 1 (0.5) and 2 (1.0)
+
+
 def test_absent_class_is_nan_not_zero():
     metric = SegmentationMetrics(class_count=3)
     metric.update(np.array([0, 1]), np.array([0, 1]))
