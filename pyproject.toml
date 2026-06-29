@@ -12,13 +12,16 @@ authors = [
 ]
 requires-python = ">=3.12,<3.13"
 dependencies = [
-    "gdown>=6.1.0",
-    "numpy>=2.0.0",  # low floor: numpy is pre-imported by Colab, so never force a swap
-    "opencv-python-headless>=4.13.0.92",
-    "pillow>=12.2.0",
-    "pydantic>=2.13.4",
-    "pydantic-settings>=2.14.2",
-    "structlog>=26.1.0",
+    # Low floors on purpose: Colab preinstalls numpy/pillow/pydantic and torch/transformers are
+    # built against them, so forcing an upgrade swaps a loaded package and breaks imports
+    # (numpy `_blas_supports_fpe`, PIL `_Ink`, ...). Keep floors at/under Colab's versions.
+    "gdown>=5.0.0",
+    "numpy>=2.0.0",
+    "opencv-python-headless>=4.8.0",
+    "pillow>=10.0.0",
+    "pydantic>=2.5.0",
+    "pydantic-settings>=2.2.0",
+    "structlog>=24.0.0",
 ]
 
 [project.optional-dependencies]
