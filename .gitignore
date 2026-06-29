@@ -46,3 +46,6 @@ mlruns/
 
 # Local demonstration images
 demos/
+
+# experiment notebooks (generated; deployed to Colab manually)
+notebooks/
