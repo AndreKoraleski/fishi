@@ -2,15 +2,13 @@
 """Grounded SAM pipelines: Grounding DINO (text -> boxes) + SAM (boxes -> masks)."""
 
 from abc import ABC, abstractmethod
-from typing import Any, cast
+from typing import Any
 
 import numpy as np
-import structlog
 from PIL import Image
 
-from fishi.segmentation.base import match_label, semantic_from_instances
-
-logger = structlog.get_logger(__name__)
+from fishi.segmentation.batching import predict_with_oom_backoff
+from fishi.segmentation.semantic import match_label, semantic_from_instances
 
 
 def _pad_boxes(boxes: list) -> list:
@@ -69,25 +67,14 @@ class GroundedSAM(ABC):
     def predict_batch(self, images: list[np.ndarray], prompts: dict[int, str]) -> list[np.ndarray]:
         """Segment a list of images, auto-shrinking the batch on CUDA OOM."""
         torch = self._torch
-        results: list[np.ndarray | None] = [None] * len(images)
-        index = 0
-        limit = self._max_batch or len(images)
-        while index < len(images):
-            size = min(limit, len(images) - index)
-            try:
-                chunk = self._predict_chunk(images[index : index + size], prompts)
-            except torch.cuda.OutOfMemoryError:
-                torch.cuda.empty_cache()
-                if size == 1:
-                    raise
-                limit = max(1, size // 2)
-                self._max_batch = limit
-                logger.warning("oom_backoff", batch_size=limit)
-                continue
-            for offset, prediction in enumerate(chunk):
-                results[index + offset] = prediction
-            index += size
-        return cast(list[np.ndarray], results)
+        results, self._max_batch = predict_with_oom_backoff(
+            images,
+            lambda chunk: self._predict_chunk(chunk, prompts),
+            torch.cuda.OutOfMemoryError,
+            on_shrink=torch.cuda.empty_cache,
+            start_batch=self._max_batch,
+        )
+        return results
 
     def _predict_chunk(self, images: list[np.ndarray], prompts: dict[int, str]) -> list[np.ndarray]:
         pil_images = [Image.fromarray(image) for image in images]

@@ -1,6 +1,6 @@
 import numpy as np
 
-from fishi.segmentation.base import match_label, semantic_from_instances
+from fishi.segmentation.semantic import match_label, semantic_from_instances
 
 
 def test_match_label_exact_and_substring():

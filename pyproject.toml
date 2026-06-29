@@ -30,7 +30,7 @@ models = [
     "accelerate>=0.26.0",
     "torch>=2.4.0",
     "torchvision>=0.19.0",
-    "transformers>=4.51.0",  # Sam2Model + Grounding DINO
+    "transformers>=5.0.0",  # Sam2Model + Grounding DINO + SAM 3 (Sam3Model)
 ]
 # Exact versions matching Google Colab's preinstalled GPU stack (verified 2026-06).
 colab = [
@@ -74,7 +74,11 @@ packages = ["fishi"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
-module = ["fishi.segmentation.grounded_sam", "fishi.segmentation.openworldsam"]
+module = [
+    "fishi.segmentation.grounded_sam",
+    "fishi.segmentation.openworldsam",
+    "fishi.segmentation.sam3",
+]
 ignore_errors = true
 
 [tool.coverage.run]
@@ -82,6 +86,7 @@ source = ["fishi"]
 omit = [
     "*/segmentation/grounded_sam.py",
     "*/segmentation/openworldsam.py",
+    "*/segmentation/sam3.py",
 ]
 
 [tool.coverage.report]
