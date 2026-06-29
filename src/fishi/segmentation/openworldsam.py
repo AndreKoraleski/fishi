@@ -54,11 +54,7 @@ class OpenWorldSam:
         self.metadata = get_metadata(config)
 
     def predict(self, image: np.ndarray, prompts: dict[int, str]) -> np.ndarray:
-        from demo.inference_utils import (
-            build_inference_inputs,
-            prepare_image_inputs,
-            resolve_category_ids,
-        )
+        from demo.inference_utils import build_inference_inputs, prepare_image_inputs
 
         torch = self._torch
         class_ids = list(prompts.keys())
@@ -69,7 +65,7 @@ class OpenWorldSam:
             _, sam_tensor, beit_tensor, height, width = prepare_image_inputs(
                 handle.name, self._config.INPUT.FORMAT
             )
-        category_ids = resolve_category_ids(texts, self.metadata)
+        category_ids = list(range(len(texts)))
         inputs = build_inference_inputs(sam_tensor, beit_tensor, height, width, texts, category_ids)
         with torch.no_grad():
             outputs = self.model(inputs)[0]
