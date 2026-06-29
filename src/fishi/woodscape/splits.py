@@ -5,8 +5,11 @@ from collections.abc import Iterable
 from importlib.resources import files
 
 import numpy as np
+import structlog
 
 from fishi.woodscape.dataset import Subset, WoodScapeDataset
+
+logger = structlog.get_logger(__name__)
 
 SPLIT_SEED = 0
 SPLIT_FRACTIONS = (0.70, 0.15, 0.15)
@@ -40,10 +43,22 @@ def load_canonical_split() -> dict[str, list[str]]:
 def split_datasets(
     dataset: WoodScapeDataset, split: dict[str, list[str]] | None = None
 ) -> dict[str, Subset]:
-    """Build one Subset per split key from a dataset, matching samples by stem."""
+    """Build one Subset per split key from a dataset, matching samples by stem.
+
+    Stems missing from the dataset are dropped (with a warning) rather than failing.
+    """
     split = split or load_canonical_split()
     index_of = {stem: index for index, stem in enumerate(dataset.stems)}
-    return {
-        name: Subset(dataset, [index_of[stem] for stem in stems if stem in index_of])
-        for name, stems in split.items()
-    }
+    subsets: dict[str, Subset] = {}
+    for name, stems in split.items():
+        present = [index_of[stem] for stem in stems if stem in index_of]
+        dropped = len(stems) - len(present)
+        if dropped:
+            logger.warning(
+                "split stems missing from dataset",
+                split=name,
+                dropped=dropped,
+                requested=len(stems),
+            )
+        subsets[name] = Subset(dataset, present)
+    return subsets

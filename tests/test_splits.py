@@ -33,3 +33,9 @@ def test_split_datasets_maps_stems_to_subsets(woodscape_root):
         "test": 0,
     }
     assert subsets["train"][0].stem == "00000_FV"
+
+
+def test_split_datasets_drops_missing_stems(woodscape_root):
+    dataset = WoodScapeDataset(get_settings(data_directory=woodscape_root))
+    subsets = split_datasets(dataset, {"train": ["00000_FV", "99999_XX"], "val": [], "test": []})
+    assert len(subsets["train"]) == 1  # 99999_XX is absent -> dropped (with a warning)
