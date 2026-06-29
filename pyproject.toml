@@ -13,7 +13,7 @@ authors = [
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "gdown>=6.1.0",
-    "numpy>=2.5.0",
+    "numpy>=2.0.0",  # low floor: numpy is pre-imported by Colab, so never force a swap
     "opencv-python-headless>=4.13.0.92",
     "pillow>=12.2.0",
     "pydantic>=2.13.4",
@@ -31,7 +31,6 @@ models = [
 ]
 # Exact versions matching Google Colab's preinstalled GPU stack (verified 2026-06).
 colab = [
-    "numpy==2.5.0",
     "torch==2.12.1",
     "torchvision==0.27.1",
     "transformers==5.12.1",
