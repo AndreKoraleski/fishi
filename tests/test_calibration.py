@@ -61,3 +61,11 @@ def test_from_json(tmp_path):
     assert calibration.name == "FV"
     assert calibration.width == 1280
     assert calibration.k1 == 339.749
+
+
+def test_unproject_handles_non_monotonic_polynomial(make_calibration):
+    # rho(theta) = theta - theta**2 is non-monotonic, so the inverse LUT must
+    # be trimmed to its increasing prefix.
+    calibration = make_calibration(k1=1.0, k2=-1.0, width=8.0, height=8.0)
+    rays = calibration.unproject(np.array([[4.0, 4.0], [0.0, 0.0]]))
+    assert rays.shape == (2, 3)

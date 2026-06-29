@@ -35,3 +35,10 @@ def test_absent_class_is_nan_not_zero():
     iou = metric.per_class_iou()
     assert np.isnan(iou[2])
     assert metric.compute()["miou"] == 1.0
+
+
+def test_reset_clears_accumulation():
+    metric = SegmentationMetrics(class_count=2)
+    metric.update(np.array([0, 1]), np.array([0, 1]))
+    metric.reset()
+    assert metric.confusion.sum() == 0

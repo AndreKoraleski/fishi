@@ -1,4 +1,6 @@
-from fishi.woodscape.splits import load_canonical_split, make_split
+from fishi.woodscape.config import get_settings
+from fishi.woodscape.dataset import WoodScapeDataset
+from fishi.woodscape.splits import load_canonical_split, make_split, split_datasets
 
 
 def test_make_split_is_deterministic():
@@ -20,3 +22,14 @@ def test_canonical_split_is_a_clean_partition():
     combined = [stem for stems in split.values() for stem in stems]
     assert len(combined) == len(set(combined))  # no overlap
     assert round(len(split["train"]) / len(combined), 2) == 0.70
+
+
+def test_split_datasets_maps_stems_to_subsets(woodscape_root):
+    dataset = WoodScapeDataset(get_settings(data_directory=woodscape_root))
+    subsets = split_datasets(dataset, {"train": ["00000_FV"], "val": ["00001_RV"], "test": []})
+    assert {name: len(subset) for name, subset in subsets.items()} == {
+        "train": 1,
+        "val": 1,
+        "test": 0,
+    }
+    assert subsets["train"][0].stem == "00000_FV"

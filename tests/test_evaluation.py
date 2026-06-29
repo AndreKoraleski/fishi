@@ -1,61 +1,44 @@
 import numpy as np
 
-from fishi.evaluation import evaluate
+from fishi.evaluation import evaluate, run
 from fishi.preprocess import Identity
-from fishi.woodscape.calibration import Calibration
-from fishi.woodscape.dataset import Sample
-
-CALIB = Calibration.from_dict(
-    {
-        "intrinsic": {
-            "aspect_ratio": 1.0,
-            "cx_offset": 0.0,
-            "cy_offset": 0.0,
-            "height": 4.0,
-            "k1": 1.0,
-            "k2": 0.0,
-            "k3": 0.0,
-            "k4": 0.0,
-            "model": "radial_poly",
-            "poly_order": 4,
-            "width": 4.0,
-        },
-        "extrinsic": {"quaternion": [1.0, 0.0, 0.0, 0.0], "translation": [0.0, 0.0, 0.0]},
-        "name": "FV",
-    }
-)
 
 
-class FakeDataset:
-    def __init__(self, samples):
-        self.samples = samples
-
-    def __len__(self):
-        return len(self.samples)
-
-    def __getitem__(self, index):
-        return self.samples[index]
-
-
-class DummyPipeline:
+class CountingPipeline:
     name = "dummy"
 
+    def __init__(self):
+        self.calls = 0
+
     def predict(self, image, prompts):
+        self.calls += 1
         return np.zeros(image.shape[:2], dtype=np.uint8)
 
 
-def _sample():
-    return Sample(
-        image=np.zeros((4, 4, 3), dtype=np.uint8),
-        label=np.ones((4, 4), dtype=np.uint8),  # all class 1 (road)
-        calibration=CALIB,
-        stem="00000_FV",
-        camera="FV",
-    )
-
-
-def test_evaluate_runs_and_returns_metrics():
-    dataset = Identity().wrap(FakeDataset([_sample(), _sample()]))
-    result = evaluate(dataset, DummyPipeline(), prompts={1: "road"}, class_count=10)
+def test_evaluate_runs_and_returns_metrics(make_sample, fake_dataset):
+    dataset = Identity().wrap(fake_dataset([make_sample(), make_sample()]))
+    result = evaluate(dataset, CountingPipeline(), prompts={1: "road"}, class_count=10)
     assert {"iou", "dice", "miou", "mdice"} <= set(result)
     assert result["miou"] == 0.0  # all-void predictions vs road labels
+
+
+def test_run_wraps_processor_and_scores(make_sample, fake_dataset):
+    dataset = fake_dataset([make_sample()])
+    result = run(Identity(), CountingPipeline(), dataset, {1: "road"}, class_count=10)
+    assert "miou" in result
+
+
+def test_cache_writes_then_skips_reinference(tmp_path, make_sample, fake_dataset):
+    samples = [make_sample("a_FV"), make_sample("b_FV")]
+
+    first = CountingPipeline()
+    run(Identity(), first, fake_dataset(samples), {1: "road"}, 10, cache_directory=tmp_path)
+    assert first.calls == 2  # one view per sample
+    assert len(list(tmp_path.rglob("*.png"))) == 2
+
+    second = CountingPipeline()
+    result = run(
+        Identity(), second, fake_dataset(samples), {1: "road"}, 10, cache_directory=tmp_path
+    )
+    assert second.calls == 0  # everything served from cache
+    assert "miou" in result
