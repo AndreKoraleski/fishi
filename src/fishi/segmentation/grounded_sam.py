@@ -42,7 +42,6 @@ class GroundedSAM(ABC):
         box_threshold: float = 0.25,
         text_threshold: float = 0.25,
         device: str | None = None,
-        dtype: str = "float32",
     ) -> None:
         import torch
         from transformers import AutoModelForZeroShotObjectDetection, AutoProcessor
@@ -51,7 +50,7 @@ class GroundedSAM(ABC):
         self.box_threshold = box_threshold
         self.text_threshold = text_threshold
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
-        self._segmenter_dtype = getattr(torch, dtype)
+        self._segmenter_dtype = torch.bfloat16
         self._max_batch: int | None = None  # largest chunk that fit so far
 
         detector = detector_checkpoint or self.detector_checkpoint

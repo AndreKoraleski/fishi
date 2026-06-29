@@ -87,7 +87,7 @@ class OpenWorldSam:
         while index < len(inputs):
             size = min(limit, len(inputs) - index)
             try:
-                with torch.no_grad():
+                with torch.no_grad(), torch.autocast(self.device, dtype=torch.bfloat16):
                     outputs = self.model(inputs[index : index + size])
             except torch.cuda.OutOfMemoryError:
                 torch.cuda.empty_cache()
