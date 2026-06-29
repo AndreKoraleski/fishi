@@ -14,12 +14,7 @@ logger = structlog.get_logger(__name__)
 
 
 def _pad_boxes(boxes: list) -> list:
-    """Pad each image's box list to the batch's max count so SAM gets a rectangular batch.
-
-    SAM's processor calls ``np.array(input_boxes)``, which fails on per-image box counts that
-    differ. The padded (dummy) boxes produce masks that are never read, since the caller only
-    iterates each image's real detections.
-    """
+    """Pad each image's box list to the batch's max count so SAM gets a rectangular batch."""
     box_lists = [box.tolist() for box in boxes]
     width = max(len(boxes) for boxes in box_lists)
     return [boxes + [[0.0, 0.0, 1.0, 1.0]] * (width - len(boxes)) for boxes in box_lists]
