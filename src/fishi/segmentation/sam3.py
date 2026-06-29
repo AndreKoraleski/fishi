@@ -7,6 +7,15 @@ from PIL import Image
 from fishi.segmentation.semantic import semantic_from_instances
 
 
+def _repeat_batch(value, n, torch):
+    """Repeat a vision-feature field (a tensor, or a nested tuple/list) along the batch dim."""
+    if torch.is_tensor(value):
+        return value.repeat(n, *([1] * (value.dim() - 1)))
+    if isinstance(value, (tuple, list)):
+        return type(value)(_repeat_batch(item, n, torch) for item in value)
+    return value
+
+
 class SamThree:
     """Text-prompted segmentation via SAM 3, producing a semantic map.
 
@@ -47,32 +56,39 @@ class SamThree:
     def predict(self, image: np.ndarray, prompts: dict[int, str]) -> np.ndarray:
         torch = self._torch
         pil_image = Image.fromarray(image)
-        masks: list[np.ndarray] = []
-        class_ids: list[int] = []
-        scores: list[float] = []
+        class_ids = list(prompts.keys())
+        concepts = [prompts[class_id] for class_id in class_ids]
 
         image_inputs = self.processor(images=pil_image, return_tensors="pt").to(self.device)
         with torch.no_grad(), torch.autocast(self.device, dtype=torch.bfloat16):
             vision_embeds = self.model.get_vision_features(pixel_values=image_inputs.pixel_values)
-        target_sizes = image_inputs["original_sizes"].tolist()
+        count = len(class_ids)
+        batched_embeds = type(vision_embeds)(
+            **{key: _repeat_batch(value, count, torch) for key, value in vision_embeds.items()}
+        )
+        text_inputs = self.processor(text=concepts, return_tensors="pt", padding=True).to(
+            self.device
+        )
+        with torch.no_grad(), torch.autocast(self.device, dtype=torch.bfloat16):
+            outputs = self.model(vision_embeds=batched_embeds, **text_inputs)
+        results = self.processor.post_process_instance_segmentation(
+            outputs,
+            threshold=self.score_threshold,
+            mask_threshold=self.mask_threshold,
+            target_sizes=image_inputs["original_sizes"].tolist() * count,
+        )
 
-        for class_id, concept in prompts.items():
-            text_inputs = self.processor(text=concept, return_tensors="pt").to(self.device)
-            with torch.no_grad(), torch.autocast(self.device, dtype=torch.bfloat16):
-                outputs = self.model(vision_embeds=vision_embeds, **text_inputs)
-            result = self.processor.post_process_instance_segmentation(
-                outputs,
-                threshold=self.score_threshold,
-                mask_threshold=self.mask_threshold,
-                target_sizes=target_sizes,
-            )[0]
+        masks: list[np.ndarray] = []
+        out_class_ids: list[int] = []
+        scores: list[float] = []
+        for class_id, result in zip(class_ids, results, strict=True):
             for mask, score in zip(result["masks"], result["scores"], strict=True):
                 array = mask.cpu().numpy() if hasattr(mask, "cpu") else np.asarray(mask)
                 masks.append(array.astype(bool))
-                class_ids.append(class_id)
+                out_class_ids.append(class_id)
                 scores.append(float(score))
-        return semantic_from_instances(masks, class_ids, scores, image.shape[:2])
+        return semantic_from_instances(masks, out_class_ids, scores, image.shape[:2])
 
     def predict_batch(self, images: list[np.ndarray], prompts: dict[int, str]) -> list[np.ndarray]:
-        """Segment each image in turn (SAM 3 takes one image + one concept per call)."""
+        """Segment each image in turn (all concepts are batched within a single image)."""
         return [self.predict(image, prompts) for image in images]
