@@ -17,6 +17,10 @@ class SampleSource(Protocol):
 
     def __getitem__(self, index: int) -> Sample: ...
 
+    def stem(self, index: int) -> str: ...
+
+    def label(self, index: int) -> np.ndarray: ...
+
 
 @dataclass
 class ProcessedSample:

@@ -1,5 +1,6 @@
 """Evaluation harness: run one preprocessing x pipeline cell and score it."""
 
+from collections.abc import Iterable
 from pathlib import Path
 
 import numpy as np
@@ -29,7 +30,8 @@ def _load_cell_cache(path: Path | None) -> dict[str, np.ndarray]:
 
 
 def _score_window(
-    window: list[Sample],
+    dataset: SampleSource,
+    indices: Iterable[int],
     pipeline: SegmentationPipeline,
     prompts: dict[int, str],
     processor: Processor,
@@ -37,13 +39,15 @@ def _score_window(
     fresh: dict[str, np.ndarray],
     metric: SegmentationMetrics,
 ) -> None:
-    """Score one window: reuse cached masks, buffer newly computed ones in `fresh`."""
+    """Score one window: reuse cached masks (reading only the label), buffer fresh ones."""
     flat_views: list[np.ndarray] = []
     spans: list[tuple[Sample, int, int]] = []  # (sample, offset into flat_views, view count)
-    for sample in window:
-        if sample.stem in cached:
-            metric.update(cached[sample.stem], sample.label)
+    for index in indices:
+        stem = dataset.stem(index)
+        if stem in cached:
+            metric.update(cached[stem], dataset.label(index))  # skip the RGB decode
             continue
+        sample = dataset[index]
         views = processor.preprocess(sample.image, sample.calibration)
         spans.append((sample, len(flat_views), len(views)))
         flat_views.extend(views)
@@ -103,8 +107,8 @@ def evaluate(
 
     total = len(dataset)
     for start in range(0, total, batch_size):
-        window = [dataset[index] for index in range(start, min(start + batch_size, total))]
-        _score_window(window, pipeline, prompts, processor, cached, fresh, metric)
+        indices = range(start, min(start + batch_size, total))
+        _score_window(dataset, indices, pipeline, prompts, processor, cached, fresh, metric)
         logger.info("evaluated", done=min(start + batch_size, total), total=total)
 
     if path is not None and fresh:

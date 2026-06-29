@@ -84,6 +84,14 @@ class WoodScapeDataset:
             camera=stem.rsplit("_", 1)[-1],
         )
 
+    def stem(self, index: int) -> str:
+        """Filename stem for a sample, without reading any file."""
+        return self.stems[index]
+
+    def label(self, index: int) -> np.ndarray:
+        """Load only the class-id label for a sample, skipping the RGB image."""
+        return np.array(Image.open(self._label_directory / f"{self.stems[index]}.png"))
+
 
 class Subset:
     """A view over selected indices of a dataset (e.g. one split)."""
@@ -97,3 +105,9 @@ class Subset:
 
     def __getitem__(self, index: int) -> Sample:
         return self.dataset[self.indices[index]]
+
+    def stem(self, index: int) -> str:
+        return self.dataset.stem(self.indices[index])
+
+    def label(self, index: int) -> np.ndarray:
+        return self.dataset.label(self.indices[index])

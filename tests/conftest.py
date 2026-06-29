@@ -20,6 +20,12 @@ class _FakeDataset:
     def __getitem__(self, index):
         return self.samples[index]
 
+    def stem(self, index):
+        return self.samples[index].stem
+
+    def label(self, index):
+        return self.samples[index].label
+
 
 def _calibration_dict(
     width=4.0,
