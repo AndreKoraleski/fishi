@@ -5,16 +5,19 @@ Usage:
 """
 
 import argparse
+from collections.abc import Callable
 from pathlib import Path
 
 import cv2
+import numpy as np
 
 from fishi.preprocess import patches, rectify, tangent
+from fishi.woodscape.calibration import Calibration
 from fishi.woodscape.config import get_settings
 from fishi.woodscape.dataset import WoodScapeDataset
 from fishi.woodscape.splits import split_datasets
 
-_DEMOS = {
+_DEMOS: dict[str, Callable[[np.ndarray, Calibration], np.ndarray]] = {
     "rectify": rectify.demonstration,
     "patches": patches.demonstration,
     "tangent": tangent.demonstration,
