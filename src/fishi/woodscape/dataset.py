@@ -83,3 +83,17 @@ class WoodScapeDataset:
             stem=stem,
             camera=stem.rsplit("_", 1)[-1],
         )
+
+
+class Subset:
+    """A view over selected indices of a dataset (e.g. one split)."""
+
+    def __init__(self, dataset: WoodScapeDataset, indices: Sequence[int]) -> None:
+        self.dataset = dataset
+        self.indices = list(indices)
+
+    def __len__(self) -> int:
+        return len(self.indices)
+
+    def __getitem__(self, index: int) -> Sample:
+        return self.dataset[self.indices[index]]
