@@ -10,10 +10,6 @@ from fishi.segmentation.semantic import semantic_from_instances
 class SamThree:
     """Text-prompted segmentation via SAM 3, producing a semantic map.
 
-    SAM 3 takes one image and one text concept per forward pass, so each prompt is run in turn and
-    the resulting instance masks are flattened into a semantic map with the highest-scoring instance
-    winning on overlap.
-
     Parameters
     ----------
     checkpoint : str, optional
@@ -55,17 +51,20 @@ class SamThree:
         class_ids: list[int] = []
         scores: list[float] = []
 
+        image_inputs = self.processor(images=pil_image, return_tensors="pt").to(self.device)
+        with torch.no_grad(), torch.autocast(self.device, dtype=torch.bfloat16):
+            vision_embeds = self.model.get_vision_features(pixel_values=image_inputs.pixel_values)
+        target_sizes = image_inputs["original_sizes"].tolist()
+
         for class_id, concept in prompts.items():
-            inputs = self.processor(images=pil_image, text=concept, return_tensors="pt").to(
-                self.device
-            )
+            text_inputs = self.processor(text=concept, return_tensors="pt").to(self.device)
             with torch.no_grad(), torch.autocast(self.device, dtype=torch.bfloat16):
-                outputs = self.model(**inputs)
+                outputs = self.model(vision_embeds=vision_embeds, **text_inputs)
             result = self.processor.post_process_instance_segmentation(
                 outputs,
                 threshold=self.score_threshold,
                 mask_threshold=self.mask_threshold,
-                target_sizes=inputs["original_sizes"].tolist(),
+                target_sizes=target_sizes,
             )[0]
             for mask, score in zip(result["masks"], result["scores"], strict=True):
                 array = mask.cpu().numpy() if hasattr(mask, "cpu") else np.asarray(mask)
