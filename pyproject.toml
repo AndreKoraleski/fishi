@@ -49,6 +49,7 @@ dev = [
 line-length = 100
 target-version = "py310"
 src = ["src", "tests"]
+extend-exclude = ["notebooks"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "C4", "N"]
@@ -64,3 +65,11 @@ ignore_missing_imports = true
 
 [tool.coverage.run]
 source = ["fishi"]
+omit = [
+    "*/segmentation/grounded_sam.py",
+    "*/segmentation/openworldsam.py",
+]
+
+[tool.coverage.report]
+exclude_also = ["if __name__ == .__main__.:"]
+fail_under = 95
