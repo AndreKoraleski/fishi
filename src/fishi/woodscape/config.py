@@ -13,7 +13,8 @@ class DriveArtifact(BaseModel):
     file_id: str
 
 
-_DEFAULT_ARTIFACTS: list[dict] = [
+# The WoodScape files on Google Drive: images, annotations, calibration, and the label index.
+DEFAULT_ARTIFACTS: list[dict] = [
     {"name": "rgb_images.zip", "file_id": "1xQ5J4huNmyK9WPoipHTnuZ7lw_J0xhvL"},
     {"name": "semantic_annotations.zip", "file_id": "1CBwi0fpDE2G99hHiINTI-AXlOMQSUnb-"},
     {"name": "calibration.zip", "file_id": "1o7KBl1QzTkugMDOadvJFSbN87njuajYc"},
@@ -28,7 +29,7 @@ class DownloadConfig(BaseModel):
     force: bool = False  # redo work even if already done
     quiet: bool = False  # silence progress output
     artifacts: list[DriveArtifact] = Field(
-        default_factory=lambda: [DriveArtifact(**artifact) for artifact in _DEFAULT_ARTIFACTS]
+        default_factory=lambda: [DriveArtifact(**artifact) for artifact in DEFAULT_ARTIFACTS]
     )
 
 
@@ -42,7 +43,7 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    data_directory: Path = Path("data")
+    data_directory: Path = Path("data")  # dataset root, relative to the current directory
     download: DownloadConfig = Field(default_factory=DownloadConfig)
 
 

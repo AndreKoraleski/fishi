@@ -15,7 +15,23 @@ import numpy as np
 
 @dataclass
 class Calibration:
-    """A WoodScape per-image fisheye calibration."""
+    """A WoodScape per-image fisheye calibration.
+
+    Attributes
+    ----------
+    k1, k2, k3, k4 : float
+        Coefficients of the radial projection polynomial rho(theta).
+    center_x_offset, center_y_offset : float
+        Principal-point offsets from the image centre, in pixels (see principal_point).
+    aspect_ratio : float
+        Vertical-to-horizontal pixel scale.
+    width, height : int
+        Image size in pixels.
+    quaternion, translation : tuple of float
+        Camera-to-vehicle extrinsics. Parsed for completeness, not used by project/unproject.
+    name : str
+        Camera id (FV, RV, MVL, MVR).
+    """
 
     k1: float
     k2: float
@@ -65,10 +81,6 @@ class Calibration:
         center_y = 0.5 * self.height + self.center_y_offset - 0.5
         return center_x, center_y
 
-    def _rho(self, theta: np.ndarray) -> np.ndarray:
-        """Radial polynomial: image radius (pixels) for incidence angle theta."""
-        return self.k1 * theta + self.k2 * theta**2 + self.k3 * theta**3 + self.k4 * theta**4
-
     def project(self, points: np.ndarray) -> np.ndarray:
         """Project 3D camera-frame points onto the fisheye image.
 
@@ -116,8 +128,12 @@ class Calibration:
         scale = np.divide(sin_theta, rho, out=np.zeros_like(rho), where=rho > 0)
         return np.stack([u * scale, v * scale, np.cos(theta)], axis=-1)
 
+    def _rho(self, theta: np.ndarray) -> np.ndarray:
+        """Radial polynomial: image radius (pixels) for incidence angle theta."""
+        return self.k1 * theta + self.k2 * theta**2 + self.k3 * theta**3 + self.k4 * theta**4
+
     def _theta(self, rho: np.ndarray) -> np.ndarray:
-        """Invert the radial polynomial (image radius -> incidence angle) via a LUT."""
+        """Invert the radial polynomial (image radius to incidence angle) via a LUT."""
         lut = self._inverse_lut
         if lut is None:
             thetas = np.linspace(0.0, np.pi, 4000)

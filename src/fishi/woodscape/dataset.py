@@ -5,14 +5,17 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
+import structlog
 from PIL import Image
 
 from fishi.woodscape.calibration import Calibration
 from fishi.woodscape.config import Settings, get_settings
 
-_RGB_DIRECTORY = "rgb_images"
-_LABEL_DIRECTORY = "semantic_annotations/gtLabels"
-_CALIBRATION_DIRECTORY = "calibration"
+logger = structlog.get_logger(__name__)
+
+RGB_DIRECTORY = "rgb_images"
+LABEL_DIRECTORY = "semantic_annotations/gtLabels"
+CALIBRATION_DIRECTORY = "calibration"
 
 
 @dataclass
@@ -43,13 +46,21 @@ class Sample:
 class WoodScapeDataset:
     """Pairs WoodScape images, segmentation labels, and calibration by stem.
 
+    Only samples with all three files are kept. An image missing its label or calibration is
+    skipped (with a warning), so iteration never hits a missing file mid-run.
+
     Parameters
     ----------
     settings : Settings, optional
-        Project settings; the dataset root is settings.data_directory. Loaded from the environment
-            when omitted.
+        Project settings. The dataset root is settings.data_directory. Loaded from the environment
+        when omitted.
     cameras : sequence of str, optional
         Keep only these cameras (FV, RV, MVL, MVR). All cameras when omitted.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the images directory is absent (run download_woodscape(settings) first).
     """
 
     def __init__(
@@ -58,11 +69,27 @@ class WoodScapeDataset:
         cameras: Sequence[str] | None = None,
     ) -> None:
         root: Path = (settings or get_settings()).data_directory
-        self._rgb_directory = root / _RGB_DIRECTORY
-        self._label_directory = root / _LABEL_DIRECTORY
-        self._calibration_directory = root / _CALIBRATION_DIRECTORY
+        self._rgb_directory = root / RGB_DIRECTORY
+        self._label_directory = root / LABEL_DIRECTORY
+        self._calibration_directory = root / CALIBRATION_DIRECTORY
+        if not self._rgb_directory.is_dir():
+            raise FileNotFoundError(
+                f"{self._rgb_directory} not found. Run download_woodscape(settings) first"
+            )
 
-        stems = sorted(path.stem for path in self._rgb_directory.glob("*.png"))
+        rgb = {path.stem for path in self._rgb_directory.glob("*.png")}
+        labelled = {path.stem for path in self._label_directory.glob("*.png")}
+        calibrated = {path.stem for path in self._calibration_directory.glob("*.json")}
+        complete = rgb & labelled & calibrated
+        incomplete = rgb - complete
+        if incomplete:
+            logger.warning(
+                "incomplete_samples_skipped",
+                skipped=len(incomplete),
+                total=len(rgb),
+            )
+
+        stems = sorted(complete)
         if cameras is not None:
             keep = set(cameras)
             stems = [stem for stem in stems if stem.rsplit("_", 1)[-1] in keep]
