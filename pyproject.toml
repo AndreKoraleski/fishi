@@ -59,7 +59,8 @@ testpaths = ["tests"]
 addopts = "--cov=fishi --cov-report=term-missing"
 
 [tool.mypy]
-python_version = "3.10"
+# numpy's type stubs use 3.12 syntax, 3.10 compat is covered by ruff + tests.
+python_version = "3.12"
 packages = ["fishi"]
 ignore_missing_imports = true
 
