@@ -13,6 +13,18 @@ from fishi.segmentation.base import match_label, semantic_from_instances
 logger = structlog.get_logger(__name__)
 
 
+def _pad_boxes(boxes: list) -> list:
+    """Pad each image's box list to the batch's max count so SAM gets a rectangular batch.
+
+    SAM's processor calls ``np.array(input_boxes)``, which fails on per-image box counts that
+    differ. The padded (dummy) boxes produce masks that are never read, since the caller only
+    iterates each image's real detections.
+    """
+    box_lists = [box.tolist() for box in boxes]
+    width = max(len(boxes) for boxes in box_lists)
+    return [boxes + [[0.0, 0.0, 1.0, 1.0]] * (width - len(boxes)) for boxes in box_lists]
+
+
 class GroundedSAM(ABC):
     """Grounding DINO detection + a SAM segmenter, producing a semantic map.
 
@@ -164,7 +176,7 @@ class GroundedSam1(GroundedSAM):
     def _segment(self, pil_images, boxes):
         torch = self._torch
         inputs = self.segmenter_processor(
-            pil_images, input_boxes=[box.tolist() for box in boxes], return_tensors="pt"
+            pil_images, input_boxes=_pad_boxes(boxes), return_tensors="pt"
         ).to(self.device)
         inputs["pixel_values"] = inputs["pixel_values"].to(self._segmenter_dtype)
         inputs["input_boxes"] = inputs["input_boxes"].to(self._segmenter_dtype)
@@ -198,7 +210,7 @@ class GroundedSam2(GroundedSAM):
     def _segment(self, pil_images, boxes):
         torch = self._torch
         inputs = self.segmenter_processor(
-            images=pil_images, input_boxes=[box.tolist() for box in boxes], return_tensors="pt"
+            images=pil_images, input_boxes=_pad_boxes(boxes), return_tensors="pt"
         ).to(self.device)
         inputs["pixel_values"] = inputs["pixel_values"].to(self._segmenter_dtype)
         with torch.no_grad():
