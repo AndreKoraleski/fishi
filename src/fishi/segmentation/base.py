@@ -12,6 +12,10 @@ class SegmentationPipeline(Protocol):
 
     def predict(self, image: np.ndarray, prompts: dict[int, str]) -> np.ndarray: ...
 
+    def predict_batch(
+        self, images: list[np.ndarray], prompts: dict[int, str]
+    ) -> list[np.ndarray]: ...
+
 
 def match_label(text_label: str, prompt_to_id: dict[str, int]) -> int | None:
     """Map a detector's returned text label back to a class id.
