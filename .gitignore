@@ -43,3 +43,6 @@ mlruns/
 .DS_Store
 .idea/
 .vscode/
+
+# Local demonstration images
+demos/

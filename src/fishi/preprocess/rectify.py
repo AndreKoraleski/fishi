@@ -9,7 +9,7 @@ import cv2
 import numpy as np
 
 from fishi.preprocess.base import Processor
-from fishi.preprocess.visualization import side_by_side
+from fishi.preprocess.visualization import row, to_rgba
 from fishi.woodscape.calibration import Calibration
 
 _FOV_DEGREES = 90.0
@@ -82,9 +82,12 @@ class Rectify(Processor):
 
 
 def demonstration(image: np.ndarray, calibration: Calibration) -> np.ndarray:
-    """Side-by-side [input | rectified] as an RGBA image with a transparent background."""
+    """Three panels: input | the fisheye zone the view keeps (rest black) | the rectified view."""
     height, width = image.shape[:2]
-    map_x, map_y = _forward_maps(calibration, height, width)
-    rectified = cv2.remap(image, map_x, map_y, cv2.INTER_LINEAR)
-    valid = (map_x >= 0) & (map_x < calibration.width) & (map_y >= 0) & (map_y < calibration.height)
-    return side_by_side(image, rectified, (valid * 255).astype(np.uint8))
+    inverse_x, inverse_y = _inverse_maps(calibration, height, width, height, width)
+    covered = (inverse_x >= 0) & (inverse_x < width) & (inverse_y >= 0) & (inverse_y < height)
+    zone = np.zeros_like(image)
+    zone[covered] = image[covered]
+    forward_x, forward_y = _forward_maps(calibration, height, width)
+    rectified = cv2.remap(image, forward_x, forward_y, cv2.INTER_LINEAR)
+    return row([to_rgba(image), to_rgba(zone), to_rgba(rectified)])

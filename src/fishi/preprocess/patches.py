@@ -9,7 +9,7 @@ import cv2
 import numpy as np
 
 from fishi.preprocess.base import Processor
-from fishi.preprocess.visualization import side_by_side
+from fishi.preprocess.visualization import grid, palette, row, to_rgba
 from fishi.woodscape.calibration import Calibration
 
 _FOV_DEGREES = 90.0
@@ -102,22 +102,14 @@ class Patches(Processor):
         return result
 
 
-def _palette(count: int) -> np.ndarray:
-    """`count` visually distinct RGB colors."""
-    hues = np.linspace(0, 179, count, endpoint=False).astype(np.uint8)
-    saturation = np.full(count, 255, dtype=np.uint8)
-    hsv = np.stack([hues, saturation, saturation], axis=-1).reshape(count, 1, 3)
-    return cv2.cvtColor(hsv, cv2.COLOR_HSV2RGB).reshape(count, 3)
-
-
 def demonstration(image: np.ndarray, calibration: Calibration) -> np.ndarray:
-    """Side-by-side [input | per-face colored coverage] as transparent RGBA."""
+    """Three panels: input | per-face coverage (coloured) | the generated cubemap faces."""
     patch_index, _, _ = _assignment(calibration, image.shape[0], image.shape[1], image.shape[0])
-    palette = _palette(len(_FACES))
+    colors = palette(len(_FACES))
     overlay = image.copy()
     for k in range(len(_FACES)):
-        overlay[patch_index == k] = (0.5 * overlay[patch_index == k] + 0.5 * palette[k]).astype(
+        overlay[patch_index == k] = (0.5 * overlay[patch_index == k] + 0.5 * colors[k]).astype(
             np.uint8
         )
-    alpha = (patch_index >= 0).astype(np.uint8) * 255
-    return side_by_side(image, overlay, alpha)
+    faces = Patches().preprocess(image, calibration)
+    return row([to_rgba(image), to_rgba(overlay), grid(faces, columns=3)])
