@@ -10,10 +10,10 @@ authors = [
     { name = "LUCAS NOGUEIRA BARROSO", email = "lucas.nogueira@discente.ufg.br" },
     { name = "RIAN DE SOUZA SANTOS", email = "rian.souza@discente.ufg.br" },
 ]
-requires-python = ">=3.10,<3.13"
+requires-python = ">=3.12,<3.13"
 dependencies = [
     "gdown>=6.1.0",
-    "numpy>=2.2.6",
+    "numpy>=2.5.0",
     "opencv-python-headless>=4.13.0.92",
     "pillow>=12.2.0",
     "pydantic>=2.13.4",
@@ -22,11 +22,19 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# Loose floors (minimum versions our code needs) for arbitrary GPU machines
 models = [
-    "accelerate>=1.14.0",
-    "torch>=2.12.1",
-    "torchvision>=0.27.1",
-    "transformers>=5.12.1",
+    "accelerate>=0.26.0",
+    "torch>=2.4.0",
+    "torchvision>=0.19.0",
+    "transformers>=4.51.0",  # Sam2Model + Grounding DINO
+]
+# Exact versions matching Google Colab's preinstalled GPU stack (verified 2026-06).
+colab = [
+    "numpy==2.5.0",
+    "torch==2.12.1",
+    "torchvision==0.27.1",
+    "transformers==5.12.1",
 ]
 
 [build-system]
@@ -47,7 +55,7 @@ dev = [
 
 [tool.ruff]
 line-length = 100
-target-version = "py310"
+target-version = "py312"
 src = ["src", "tests"]
 extend-exclude = ["notebooks"]
 
@@ -59,10 +67,13 @@ testpaths = ["tests"]
 addopts = "--cov=fishi --cov-report=term-missing"
 
 [tool.mypy]
-# numpy's type stubs use 3.12 syntax, 3.10 compat is covered by ruff + tests.
 python_version = "3.12"
 packages = ["fishi"]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["fishi.segmentation.grounded_sam", "fishi.segmentation.openworldsam"]
+ignore_errors = true
 
 [tool.coverage.run]
 source = ["fishi"]
