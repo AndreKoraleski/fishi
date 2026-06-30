@@ -29,7 +29,7 @@ class ProcessedSample:
     Attributes
     ----------
     views : list of np.ndarray
-        Model-input images: one for None/Rectify, several for Patches.
+        Model-input images: one for Identity/Rectify, several for Patches/Tangent.
     label : np.ndarray
         Class-id mask in the original fisheye space.
     calibration : Calibration
@@ -53,8 +53,25 @@ class Processor(ABC):
     name: str
 
     @abstractmethod
-    def preprocess(self, image: np.ndarray, calibration: Calibration) -> list[np.ndarray]:
-        """Map a fisheye image to one or more model-input views."""
+    def preprocess(
+        self, image: np.ndarray, calibration: Calibration, interpolation: int = 1
+    ) -> list[np.ndarray]:
+        """Map a fisheye image to one or more model-input views.
+
+        Parameters
+        ----------
+        image : np.ndarray
+            Fisheye image (or label map) of shape (H, W) or (H, W, C).
+        calibration : Calibration
+            Calibration of the source image.
+        interpolation : int
+            cv2 remap flag. Default INTER_LINEAR (1) for images, INTER_NEAREST for labels.
+
+        Returns
+        -------
+        list of np.ndarray
+            One view for None/Rectify, several for Patches/Tangent.
+        """
 
     @abstractmethod
     def postprocess(self, predictions: list[np.ndarray], calibration: Calibration) -> np.ndarray:

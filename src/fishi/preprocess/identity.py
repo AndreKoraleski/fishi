@@ -11,7 +11,9 @@ class Identity(Processor):
 
     name = "none"
 
-    def preprocess(self, image: np.ndarray, calibration: Calibration) -> list[np.ndarray]:
+    def preprocess(
+        self, image: np.ndarray, calibration: Calibration, interpolation: int = 1
+    ) -> list[np.ndarray]:
         return [image]
 
     def postprocess(self, predictions: list[np.ndarray], calibration: Calibration) -> np.ndarray:

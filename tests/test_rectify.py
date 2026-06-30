@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from fishi.preprocess.rectify import Rectify, _forward_maps, demonstration
+from fishi.preprocess.rectify import Rectify, demonstration, forward_maps
 
 
 @pytest.fixture
@@ -16,7 +16,7 @@ def test_preprocess_returns_one_view_at_input_size(calibration):
 
 
 def test_center_samples_principal_point(calibration):
-    map_x, map_y = _forward_maps(calibration, 64, 64)
+    map_x, map_y = forward_maps(calibration, 64, 64)
     center_x, center_y = calibration.principal_point
     assert abs(map_x[32, 32] - center_x) < 1.0
     assert abs(map_y[32, 32] - center_y) < 1.0

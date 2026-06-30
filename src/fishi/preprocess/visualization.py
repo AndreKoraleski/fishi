@@ -33,7 +33,7 @@ def to_rgba(image: np.ndarray, alpha: np.ndarray | None = None) -> np.ndarray:
     image : np.ndarray
         RGB image of shape (H, W, 3).
     alpha : np.ndarray, optional
-        Alpha mask of shape (H, W); fully opaque when omitted.
+        Alpha mask of shape (H, W). Fully opaque when omitted.
 
     Returns
     -------
@@ -55,14 +55,14 @@ def grid(views: list[np.ndarray], columns: int, gap: int = 4) -> np.ndarray:
     views : list of np.ndarray
         Square RGB views to tile, in row-major order.
     columns : int
-        Number of columns; rows follow from the view count.
+        Number of columns. Rows follow from the view count.
     gap : int
         Transparent pixels between cells.
 
     Returns
     -------
     np.ndarray
-        RGBA image; cells are opaque, gaps and padding transparent.
+        RGBA image. Cells are opaque, gaps and padding transparent.
     """
     rows = ceil(len(views) / columns)
     cell = max(1, views[0].shape[0] // rows)
@@ -84,14 +84,14 @@ def row(panels: list[np.ndarray], gap: int = 10) -> np.ndarray:
     Parameters
     ----------
     panels : list of np.ndarray
-        RGBA panels of shape (H, W, 4); panel heights may differ.
+        RGBA panels of shape (H, W, 4). Panel heights may differ.
     gap : int
         Transparent pixels between panels.
 
     Returns
     -------
     np.ndarray
-        RGBA image sized (max panel height, total width); gaps and padding transparent.
+        RGBA image sized (max panel height, total width). Gaps and padding transparent.
     """
     height = max(panel.shape[0] for panel in panels)
     width = sum(panel.shape[1] for panel in panels) + gap * (len(panels) - 1)
