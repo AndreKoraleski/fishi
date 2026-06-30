@@ -264,19 +264,32 @@ dependencies = [
     { name = "pillow" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
+    { name = "rich" },
     { name = "structlog" },
+    { name = "typer" },
 ]
 
 [package.optional-dependencies]
-colab = [
+download = [
+    { name = "gdown" },
+]
+gdino-sam1 = [
+    { name = "accelerate" },
     { name = "torch" },
     { name = "torchvision" },
     { name = "transformers" },
 ]
-download = [
-    { name = "gdown" },
+gdino-sam2 = [
+    { name = "accelerate" },
+    { name = "torch" },
+    { name = "torchvision" },
+    { name = "transformers" },
 ]
-models = [
+openworldsam = [
+    { name = "torch" },
+    { name = "torchvision" },
+]
+sam3 = [
     { name = "accelerate" },
     { name = "torch" },
     { name = "torchvision" },
@@ -294,22 +307,31 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "accelerate", marker = "extra == 'models'", specifier = ">=0.26.0" },
+    { name = "accelerate", marker = "extra == 'gdino-sam1'", specifier = ">=0.26.0" },
+    { name = "accelerate", marker = "extra == 'gdino-sam2'", specifier = ">=0.26.0" },
+    { name = "accelerate", marker = "extra == 'sam3'", specifier = ">=0.26.0" },
     { name = "gdown", marker = "extra == 'download'", specifier = ">=5.0.0" },
     { name = "numpy", specifier = ">=2.0.0" },
     { name = "opencv-python-headless", specifier = ">=4.8.0" },
     { name = "pillow", specifier = ">=10.0.0" },
     { name = "pydantic", specifier = ">=2.5.0" },
     { name = "pydantic-settings", specifier = ">=2.2.0" },
+    { name = "rich", specifier = ">=15.0.0" },
     { name = "structlog", specifier = ">=24.0.0" },
-    { name = "torch", marker = "extra == 'colab'", specifier = "==2.12.1" },
-    { name = "torch", marker = "extra == 'models'", specifier = ">=2.4.0" },
-    { name = "torchvision", marker = "extra == 'colab'", specifier = "==0.27.1" },
-    { name = "torchvision", marker = "extra == 'models'", specifier = ">=0.19.0" },
-    { name = "transformers", marker = "extra == 'colab'", specifier = "==5.12.1" },
-    { name = "transformers", marker = "extra == 'models'", specifier = ">=5.0.0" },
+    { name = "torch", marker = "extra == 'gdino-sam1'", specifier = ">=2.4.0" },
+    { name = "torch", marker = "extra == 'gdino-sam2'", specifier = ">=2.4.0" },
+    { name = "torch", marker = "extra == 'openworldsam'", specifier = ">=2.4.0" },
+    { name = "torch", marker = "extra == 'sam3'", specifier = ">=2.4.0" },
+    { name = "torchvision", marker = "extra == 'gdino-sam1'", specifier = ">=0.19.0" },
+    { name = "torchvision", marker = "extra == 'gdino-sam2'", specifier = ">=0.19.0" },
+    { name = "torchvision", marker = "extra == 'openworldsam'", specifier = ">=0.19.0" },
+    { name = "torchvision", marker = "extra == 'sam3'", specifier = ">=0.19.0" },
+    { name = "transformers", marker = "extra == 'gdino-sam1'", specifier = ">=5.0.0" },
+    { name = "transformers", marker = "extra == 'gdino-sam2'", specifier = ">=5.0.0" },
+    { name = "transformers", marker = "extra == 'sam3'", specifier = ">=5.0.0" },
+    { name = "typer", specifier = ">=0.25.1" },
 ]
-provides-extras = ["download", "models", "colab"]
+provides-extras = ["download", "sam3", "gdino-sam1", "gdino-sam2", "openworldsam"]
 
 [package.metadata.requires-dev]
 dev = [

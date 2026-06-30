@@ -1,9 +1,9 @@
 """Evaluation harness: score one preprocessing x pipeline cell at a time.
 
-evaluate scores a cell; run wraps a processor, caches predictions, saves the cell report, and
-skips cells already done. A driver (e.g. a notebook) loads one model at a time and loops these
-over the preprocessings, so the heavy pipelines never coexist in memory. Aggregate the saved cell
-reports with report.to_matrix.
+evaluate scores a cell. run wraps a processor, caches predictions, saves the cell report, and skips
+cells already done. A driver (e.g. a notebook) loads one model at a time and loops these over the
+preprocessings, so the heavy pipelines never coexist in memory. Aggregate the saved cell reports
+with report.to_matrix.
 """
 
 import json
@@ -147,3 +147,24 @@ def run(
     if metrics_directory is not None:
         save_cell(metrics, classes.CLASS_NAMES, pipeline.name, processor.name, metrics_directory)
     return cell_report(metrics, classes.CLASS_NAMES, pipeline.name, processor.name)
+
+
+def score(
+    predictions: dict[str, np.ndarray],
+    dataset: SampleSource,
+    class_count: int | None = None,
+    ignore_index: int = classes.VOID_ID,
+) -> dict[str, np.ndarray | float]:
+    """Score externally-produced predictions against a dataset, on the project's protocol.
+
+    predictions maps each sample stem to its fisheye-space label map (the project's class ids).
+    Pair it with a split, e.g. score(my_predictions, load_split("test")), to compare a model
+    trained elsewhere against our numbers. Stems missing from predictions are skipped.
+    """
+    class_count = classes.CLASS_COUNT if class_count is None else class_count
+    metric = SegmentationMetrics(class_count, ignore_index=ignore_index)
+    for index in range(len(dataset)):
+        stem = dataset.stem(index)
+        if stem in predictions:
+            metric.update(predictions[stem], dataset.label(index))
+    return metric.compute()

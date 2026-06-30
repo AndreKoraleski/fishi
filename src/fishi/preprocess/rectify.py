@@ -41,14 +41,14 @@ def inverse_maps(
     out_width: int,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Map each fisheye pixel to the pinhole pixel whose prediction it takes."""
-    focal_px = focal(out_width, FOV_DEGREES)
+    focal_pixels = focal(out_width, FOV_DEGREES)
     center_x, center_y = out_width / 2, out_height / 2
     columns, rows = np.meshgrid(np.arange(fisheye_width), np.arange(fisheye_height))
     rays = calibration.unproject(np.stack([columns, rows], axis=-1))
     x, y, z = rays[..., 0], rays[..., 1], rays[..., 2]
     with np.errstate(divide="ignore", invalid="ignore"):
-        map_x = focal_px * x / z + center_x
-        map_y = focal_px * y / z + center_y
+        map_x = focal_pixels * x / z + center_x
+        map_y = focal_pixels * y / z + center_y
     behind = z <= 0  # rays past 180 degrees have no pinhole pixel
     map_x[behind] = -1.0
     map_y[behind] = -1.0

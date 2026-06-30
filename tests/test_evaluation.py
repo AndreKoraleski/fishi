@@ -1,6 +1,6 @@
 import numpy as np
 
-from fishi.evaluation import evaluate, run
+from fishi.evaluation import evaluate, run, score
 from fishi.preprocess import Identity
 
 
@@ -76,6 +76,16 @@ def test_checkpoint_flushes_cache_midway(tmp_path, make_sample, fake_dataset):
     assert len(list(tmp_path.glob("*.npz"))) == 1
 
 
+def test_score_external_predictions(make_sample, fake_dataset):
+    dataset = fake_dataset([make_sample("00000_FV"), make_sample("00001_RV")])
+    predictions = {
+        "00000_FV": np.ones((4, 4), dtype=np.uint8),  # matches the all-class-1 label
+        "00001_RV": np.zeros((4, 4), dtype=np.uint8),  # predicts void (wrong)
+    }
+    result = score(predictions, dataset, class_count=10)
+    assert result["miou"] == 0.5  # class 1: one image right, one wrong
+
+
 def test_run_skips_each_preprocessing_independently(tmp_path, make_sample, fake_dataset):
     samples = [make_sample("00000_FV")]
     pipeline = CountingPipeline()
@@ -84,3 +94,10 @@ def test_run_skips_each_preprocessing_independently(tmp_path, make_sample, fake_
     assert (tmp_path / "dummy__none.json").exists()
     run(Identity(), pipeline, fake_dataset(samples), {1: "road"}, 10, metrics_directory=tmp_path)
     assert pipeline.calls == 1  # the finished cell is skipped on the second pass
+
+
+def test_sweep_covers_every_preprocessing(tmp_path, make_sample, fake_dataset):
+    from fishi.sweep import PREPROCESSORS, sweep
+
+    sweep(CountingPipeline(), fake_dataset([make_sample("00000_FV")]), tmp_path)
+    assert len(list(tmp_path.glob("*.json"))) == len(PREPROCESSORS)

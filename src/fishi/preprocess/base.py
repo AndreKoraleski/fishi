@@ -48,7 +48,11 @@ class ProcessedSample:
 
 
 class Processor(ABC):
-    """A paired image processor: preprocess and postprocess."""
+    """A paired image processor: preprocess to model-input views, postprocess back to fisheye.
+
+    The extension contract for a new preprocessing: implement preprocess and postprocess, then
+    evaluate it on the canonical split with fishi.run.
+    """
 
     name: str
 

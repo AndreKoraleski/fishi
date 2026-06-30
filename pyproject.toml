@@ -5,11 +5,12 @@ description = "Preprocessing techniques for zero-shot segmentation on the fishey
 readme = "README.md"
 authors = [
     { name = "ANDRE VINICIUS MOURA KORALESKI", email = "andre.andre2@discente.ufg.br" },
-    { name = "HENRICK DE SOUZA SILVA", email = "henrick.henrick@discente.ufg.br" },
     { name = "CAIO LUCCA DOS SANTOS OLIVEIRA", email = "caiolucca@discente.ufg.br" },
+    { name = "HENRICK DE SOUZA SILVA", email = "henrick.henrick@discente.ufg.br" },
     { name = "LUCAS NOGUEIRA BARROSO", email = "lucas.nogueira@discente.ufg.br" },
     { name = "RIAN DE SOUZA SANTOS", email = "rian.souza@discente.ufg.br" },
 ]
+# The python version is set to 3.12 due to library compatibility issues. We plan to loosen this.
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "numpy>=2.0.0",
@@ -17,26 +18,23 @@ dependencies = [
     "pillow>=10.0.0",
     "pydantic>=2.5.0",
     "pydantic-settings>=2.2.0",
+    "rich>=15.0.0",
     "structlog>=24.0.0",
+    "typer>=0.25.1",
 ]
 
 [project.optional-dependencies]
-download = [
-    "gdown>=5.0.0",
-]
+download = ["gdown>=5.0.0"]
 
-models = [
-    "accelerate>=0.26.0",
-    "torch>=2.4.0",
-    "torchvision>=0.19.0",
-    "transformers>=5.0.0",
-]
+# The three HuggingFace models share one stack, so install only the one you run.
+sam3 = ["torch>=2.4.0", "torchvision>=0.19.0", "transformers>=5.0.0", "accelerate>=0.26.0"]
+gdino-sam1 = ["torch>=2.4.0", "torchvision>=0.19.0", "transformers>=5.0.0", "accelerate>=0.26.0"]
+gdino-sam2 = ["torch>=2.4.0", "torchvision>=0.19.0", "transformers>=5.0.0", "accelerate>=0.26.0"]
+# OpenWorldSAM is detectron2-based, set up from its repo (see docs).
+openworldsam = ["torch>=2.4.0", "torchvision>=0.19.0"]
 
-colab = [
-    "torch==2.12.1",
-    "torchvision==0.27.1",
-    "transformers==5.12.1",
-]
+[project.scripts]
+fishi = "fishi.cli:app"
 
 [build-system]
 requires = ["hatchling"]
@@ -90,6 +88,7 @@ omit = [
     "*/segmentation/grounded_sam/*.py",
     "*/segmentation/openworldsam.py",
     "*/segmentation/sam3.py",
+    "*/cli.py",
 ]
 
 [tool.coverage.report]
