@@ -60,7 +60,7 @@ def _calibration_dict(
 
 @pytest.fixture
 def make_calibration():
-    """Factory for a small synthetic Calibration; override any intrinsic by kwarg."""
+    """Factory for a small synthetic Calibration. Override any intrinsic by kwarg."""
 
     def _make(**overrides):
         return Calibration.from_dict(_calibration_dict(**overrides))

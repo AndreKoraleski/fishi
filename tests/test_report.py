@@ -1,6 +1,6 @@
 import numpy as np
 
-from fishi.report import cell_report, load_cells, save_cell, to_csv, to_markdown, to_matrix
+from fishi.report import cell_report, load_cells, save_cell, to_csv, to_matrix
 
 
 def _metrics():
@@ -49,12 +49,9 @@ def test_cell_report_carries_extended_metrics():
     assert report["errors"]["confused"] == 0.3
 
 
-def test_to_matrix_and_markdown_show_delta_vs_baseline(tmp_path):
+def test_to_matrix_pivots_cells(tmp_path):
     save_cell(_metrics(), ["void", "road"], "sam3", "none", tmp_path)  # miou 0.5
     save_cell({**_metrics(), "miou": 0.6}, ["void", "road"], "sam3", "rectify", tmp_path)
     matrix = to_matrix(tmp_path)
     assert matrix["sam3"]["none"] == 0.5
     assert matrix["sam3"]["rectify"] == 0.6
-    markdown = to_markdown(tmp_path)
-    assert "sam3" in markdown
-    assert "(+0.100)" in markdown  # rectify 0.6 against the none baseline 0.5

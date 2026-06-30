@@ -34,7 +34,8 @@ def test_ignore_index_class_dropped_from_mean():
     metric = SegmentationMetrics(class_count=3, ignore_index=0)
     metric.update(np.array([1, 0, 2]), np.array([1, 1, 2]))  # one class-1 pixel predicted as 0
     result = metric.compute()
-    assert np.isnan(result["iou"][0])  # void excluded from the per-class report
+    iou = np.asarray(result["iou"])
+    assert np.isnan(iou[0])  # void excluded from the per-class report
     np.testing.assert_allclose(result["miou"], 0.75)  # mean over classes 1 (0.5) and 2 (1.0)
 
 
