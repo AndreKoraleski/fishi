@@ -1,4 +1,4 @@
-"""Segmentation metrics: per-class and mean IoU and Dice."""
+"""Segmentation metrics core: per-class and mean IoU and Dice."""
 
 import numpy as np
 
@@ -7,7 +7,8 @@ class SegmentationMetrics:
     """Accumulate predictions and report IoU and Dice, per class and mean.
 
     A single confusion matrix over the classes backs both metrics, so IoU and Dice stay consistent.
-    Call update() per sample, then compute().
+    Call update() per sample, then compute(). The confusion matrix is public, so the diagnostics
+    module derives its richer views (accuracies, error breakdown, and so on) from it.
 
     Parameters
     ----------
@@ -46,13 +47,13 @@ class SegmentationMetrics:
         return true_positive, false_positive, false_negative
 
     def per_class_iou(self) -> np.ndarray:
-        """Per-class IoU; NaN for classes absent from both prediction and target."""
+        """Per-class IoU. NaN for classes absent from both prediction and target."""
         tp, fp, fn = self._tp_fp_fn()
         denominator = tp + fp + fn
         return np.divide(tp, denominator, out=np.full_like(tp, np.nan), where=denominator > 0)
 
     def per_class_dice(self) -> np.ndarray:
-        """Per-class Dice; NaN for classes absent from both prediction and target."""
+        """Per-class Dice. NaN for classes absent from both prediction and target."""
         tp, fp, fn = self._tp_fp_fn()
         denominator = 2 * tp + fp + fn
         return np.divide(2 * tp, denominator, out=np.full_like(tp, np.nan), where=denominator > 0)
@@ -63,8 +64,8 @@ class SegmentationMetrics:
         Returns
         -------
         dict
-            Keys: iou, dice (per-class arrays); miou, mdice (means over classes present in the
-                data).
+            Keys: iou and dice (per-class arrays), miou and mdice (means over classes present in
+                the data).
         """
         iou = self.per_class_iou()
         dice = self.per_class_dice()
