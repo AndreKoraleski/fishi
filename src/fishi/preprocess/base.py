@@ -69,7 +69,8 @@ class Processor(ABC):
         calibration : Calibration
             Calibration of the source image.
         interpolation : int
-            cv2 remap flag. Default INTER_LINEAR (1) for images, INTER_NEAREST for labels.
+            cv2 remap flag. Defaults to 1 (cv2.INTER_LINEAR), the right choice for images. Callers
+            pass cv2.INTER_NEAREST when remapping label maps so class ids are not blended.
 
         Returns
         -------

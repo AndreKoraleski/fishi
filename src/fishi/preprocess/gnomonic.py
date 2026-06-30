@@ -65,6 +65,8 @@ class GnomonicMultiView(Processor):
         height, width = int(calibration.height), int(calibration.width)
         size = predictions[0].shape[0]
         view_index, u_map, v_map = self.assign(calibration, height, width, size)
+        # Pixels no view covers stay 0. For WoodScape that is void (the ignore class), so they
+        # score as misses rather than as a real class.
         result = np.zeros((height, width), dtype=predictions[0].dtype)
         u_index = np.clip(np.rint(u_map), 0, size - 1).astype(int)
         v_index = np.clip(np.rint(v_map), 0, size - 1).astype(int)

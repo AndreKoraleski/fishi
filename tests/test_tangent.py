@@ -42,8 +42,8 @@ def test_preprocess_returns_one_view_per_visible_tile(calibration):
     assert all(view.shape == (64, 64, 3) for view in views)
 
 
-def test_tile_size_overrides_view_resolution(calibration):
-    views = TangentImages(tile_size=32).preprocess(np.zeros((64, 64, 3), np.uint8), calibration)
+def test_view_size_overrides_resolution(calibration):
+    views = TangentImages(view_size=32).preprocess(np.zeros((64, 64, 3), np.uint8), calibration)
     assert all(view.shape == (32, 32, 3) for view in views)
 
 

@@ -124,7 +124,7 @@ class TangentImages(GnomonicMultiView):
         self,
         base_level: int = 0,
         fov_degrees: float | None = None,
-        tile_size: int | None = None,
+        view_size: int | None = None,
         max_angle_degrees: float = 100.0,
     ) -> None:
         """Place the tangent tiles.
@@ -135,8 +135,8 @@ class TangentImages(GnomonicMultiView):
             Icosahedron subdivisions. Level 0 gives 20 faces before filtering.
         fov_degrees : float, optional
             Per-tile field of view. Defaults to a value that spans a face plus a small overlap.
-        tile_size : int, optional
-            Output tile side in pixels. Defaults to the input image height.
+        view_size : int, optional
+            Output view side in pixels. Defaults to the input image height.
         max_angle_degrees : float
             Keep only tiles whose centre lies within this angle of the forward axis. The default
             of 100 covers a WoodScape fisheye (about 190 degrees, so a 95-degree half-angle) with
@@ -146,7 +146,7 @@ class TangentImages(GnomonicMultiView):
         keep = directions[:, 2] >= np.cos(radians(max_angle_degrees))
         self.directions = directions[keep]
         self.fov_degrees = fov_degrees if fov_degrees is not None else default_fov
-        self.view_size = tile_size
+        self.view_size = view_size
         self.rotations = [rotation_to(direction) for direction in self.directions]
 
 
