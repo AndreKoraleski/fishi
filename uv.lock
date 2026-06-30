@@ -259,7 +259,6 @@ name = "fishi"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
-    { name = "gdown" },
     { name = "numpy" },
     { name = "opencv-python-headless" },
     { name = "pillow" },
@@ -273,6 +272,9 @@ colab = [
     { name = "torch" },
     { name = "torchvision" },
     { name = "transformers" },
+]
+download = [
+    { name = "gdown" },
 ]
 models = [
     { name = "accelerate" },
@@ -293,7 +295,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "accelerate", marker = "extra == 'models'", specifier = ">=0.26.0" },
-    { name = "gdown", specifier = ">=5.0.0" },
+    { name = "gdown", marker = "extra == 'download'", specifier = ">=5.0.0" },
     { name = "numpy", specifier = ">=2.0.0" },
     { name = "opencv-python-headless", specifier = ">=4.8.0" },
     { name = "pillow", specifier = ">=10.0.0" },
@@ -307,7 +309,7 @@ requires-dist = [
     { name = "transformers", marker = "extra == 'colab'", specifier = "==5.12.1" },
     { name = "transformers", marker = "extra == 'models'", specifier = ">=5.0.0" },
 ]
-provides-extras = ["models", "colab"]
+provides-extras = ["download", "models", "colab"]
 
 [package.metadata.requires-dev]
 dev = [

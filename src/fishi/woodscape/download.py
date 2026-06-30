@@ -4,7 +4,6 @@ from pathlib import Path
 from zipfile import ZipFile
 
 import structlog
-from gdown.download import download
 
 from fishi.woodscape.config import Settings, get_settings
 
@@ -66,7 +65,13 @@ def download_woodscape(settings: Settings | None = None) -> Path:
 
 
 def fetch(file_id: str, destination: Path, quiet: bool) -> None:
-    """Download one Google Drive file by id."""
+    """Download one Google Drive file by id. Needs the optional download extra (gdown)."""
+    try:
+        from gdown.download import download
+    except ImportError as error:
+        raise ImportError(
+            "Fetching WoodScape needs gdown. Install it with: pip install 'fishi[download]'"
+        ) from error
     download(id=file_id, output=str(destination), quiet=quiet)
 
 
