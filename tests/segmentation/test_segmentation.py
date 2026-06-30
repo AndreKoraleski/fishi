@@ -18,7 +18,7 @@ def test_semantic_from_instances_higher_score_wins_on_overlap():
     # low-score full mask of class 1, high-score corner of class 2
     result = semantic_from_instances([full, corner], [1, 2], [0.3, 0.9], (4, 4))
     assert result[3, 3] == 1  # only the full mask covers here
-    assert result[0, 0] == 2  # overlap -> higher score (corner) wins
+    assert result[0, 0] == 2  # on overlap the higher score (corner) wins
 
 
 def test_semantic_from_instances_background_when_empty():

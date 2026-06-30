@@ -37,7 +37,7 @@ def semantic_from_instances(
     class_ids : list of int
         Class id for each mask.
     scores : list of float
-        Confidence for each mask; controls overlap priority.
+        Confidence for each mask. Controls overlap priority.
     shape : tuple of int
         (H, W) of the output map.
     background : int

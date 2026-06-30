@@ -1,4 +1,4 @@
-"""Open-vocabulary segmentation pipelines (text prompts -> semantic masks)."""
+"""Open-vocabulary segmentation pipelines (text prompts to semantic masks)."""
 
 from fishi.segmentation.base import SegmentationPipeline
 from fishi.segmentation.grounded_sam import GroundedSam1, GroundedSam2

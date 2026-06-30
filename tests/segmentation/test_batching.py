@@ -29,7 +29,7 @@ def test_halves_chunk_on_oom_until_it_fits():
         [1, 2, 3, 4], predict_chunk, FakeOOMError, on_shrink=lambda: shrinks.append(1)
     )
     assert results == [10, 20, 30, 40]  # every item still processed, in order
-    assert limit == 2  # 4 -> OOM -> 2 fits
+    assert limit == 2  # 4 OOMs, then 2 fits
     assert tried[0] == 4 and shrinks  # tried the full batch, shrank, retried
 
 

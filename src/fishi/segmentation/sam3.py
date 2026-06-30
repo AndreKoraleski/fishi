@@ -1,5 +1,5 @@
 # pyright: reportMissingImports=false, reportArgumentType=false, reportCallIssue=false
-"""SAM 3 pipeline: native text-promptable segmentation, no detector."""
+"""SAM 3 pipeline: native text-promptable segmentation, no detector (checkpoint facebook/sam3)."""
 
 import numpy as np
 from PIL import Image
@@ -7,12 +7,12 @@ from PIL import Image
 from fishi.segmentation.semantic import semantic_from_instances
 
 
-def _repeat_batch(value, n, torch):
+def repeat_batch(value, n, torch):
     """Repeat a vision-feature field (a tensor, or a nested tuple/list) along the batch dim."""
     if torch.is_tensor(value):
         return value.repeat(n, *([1] * (value.dim() - 1)))
     if isinstance(value, (tuple, list)):
-        return type(value)(_repeat_batch(item, n, torch) for item in value)
+        return type(value)(repeat_batch(item, n, torch) for item in value)
     return value
 
 
@@ -22,13 +22,13 @@ class SamThree:
     Parameters
     ----------
     checkpoint : str, optional
-        HuggingFace model id (gated; needs HF_TOKEN).
+        HuggingFace model id (gated, needs HF_TOKEN).
     score_threshold : float
         Minimum instance confidence to keep.
     mask_threshold : float
         Threshold for binarizing each mask.
     device : str, optional
-        Torch device; defaults to cuda when available.
+        Torch device. Defaults to cuda when available.
     """
 
     name = "sam3"
@@ -64,7 +64,7 @@ class SamThree:
             vision_embeds = self.model.get_vision_features(pixel_values=image_inputs.pixel_values)
         count = len(class_ids)
         batched_embeds = type(vision_embeds)(
-            **{key: _repeat_batch(value, count, torch) for key, value in vision_embeds.items()}
+            **{key: repeat_batch(value, count, torch) for key, value in vision_embeds.items()}
         )
         text_inputs = self.processor(text=concepts, return_tensors="pt", padding=True).to(
             self.device

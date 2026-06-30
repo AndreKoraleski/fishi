@@ -17,7 +17,7 @@ def predict_with_oom_backoff[T](
     """Run predict_chunk over items in chunks, halving the size on out-of-memory.
 
     Begins at start_batch (or the whole list). When predict_chunk raises oom_error it calls
-    on_shrink (e.g. to empty the CUDA cache), halves the chunk size, and retries — re-raising only
+    on_shrink (e.g. to empty the CUDA cache), halves the chunk size, and retries, re-raising only
     when a single item still will not fit.
 
     Parameters
@@ -31,7 +31,7 @@ def predict_with_oom_backoff[T](
     on_shrink : callable
         Called with no arguments before each retry, e.g. to free cached memory.
     start_batch : int, optional
-        Initial chunk size; defaults to the whole list.
+        Initial chunk size. Defaults to the whole list.
 
     Returns
     -------

@@ -27,7 +27,7 @@ class OpenWorldSam:
         OpenWorldSAM repo root, prepended to sys.path so demo.inference_utils
         is importable.
     device : str, optional
-        Torch device; defaults to cuda when available.
+        Torch device. Defaults to cuda when available.
     """
 
     name = "openworldsam"
@@ -73,5 +73,5 @@ class OpenWorldSam:
         return np.asarray(class_ids, dtype=np.uint8)[channel]
 
     def predict_batch(self, images: list[np.ndarray], prompts: dict[int, str]) -> list[np.ndarray]:
-        """Segment each image in turn; OWS's SAM2 forward doesn't batch reliably."""
+        """Segment each image in turn. OWS's SAM2 forward doesn't batch reliably."""
         return [self.predict(image, prompts) for image in images]

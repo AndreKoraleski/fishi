@@ -74,7 +74,7 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = [
-    "fishi.segmentation.grounded_sam",
+    "fishi.segmentation.grounded_sam.*",
     "fishi.segmentation.openworldsam",
     "fishi.segmentation.sam3",
 ]
@@ -87,7 +87,7 @@ venv = ".venv"
 [tool.coverage.run]
 source = ["fishi"]
 omit = [
-    "*/segmentation/grounded_sam.py",
+    "*/segmentation/grounded_sam/*.py",
     "*/segmentation/openworldsam.py",
     "*/segmentation/sam3.py",
 ]
