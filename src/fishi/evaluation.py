@@ -76,7 +76,7 @@ def evaluate(
     Returns
     -------
     dict
-        Per-class and mean IoU and Dice.
+        Per-class and mean IoU and accuracy.
     """
     prompts = classes.PROMPTS if prompts is None else prompts
     class_count = classes.CLASS_COUNT if class_count is None else class_count
@@ -124,10 +124,12 @@ def run(
     checkpoint_every: int = 200,
     force: bool = False,
 ) -> dict:
-    """Evaluate one cell and return its report, saving it and skipping cells already finished.
+    """Evaluate one cell and return its cell report, saving it and skipping cells already finished.
 
-    With metrics_directory set, the cell report is written there, and a cell whose report already
-    exists is skipped (its saved report is returned) unless force is True.
+    The returned dict is the cell report (pipeline, preprocessing, miou, macc, per_class), not the
+    raw metric arrays that evaluate and score return. With metrics_directory set, the cell report is
+    written there, and a cell whose report already exists is skipped (its saved report is returned)
+    unless force is True.
     """
     if metrics_directory is not None and not force:
         report_path = Path(metrics_directory) / f"{pipeline.name}__{processor.name}.json"

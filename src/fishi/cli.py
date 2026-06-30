@@ -1,4 +1,4 @@
-"""The fishi command line: download, run a model over the sweep, report, demos, ceiling."""
+"""The fishi command line: download, run, report, diagnose, ceiling, and demos."""
 
 from collections.abc import Callable
 from pathlib import Path
@@ -11,7 +11,7 @@ from rich.console import Console
 from rich.progress import track
 from rich.table import Table
 
-from fishi.analysis import resampling_ceiling
+from fishi.analysis import error_decomposition, resampling_ceiling
 from fishi.evaluation import run
 from fishi.preprocess import patches, rectify, tangent
 from fishi.report import to_csv, to_matrix
@@ -59,7 +59,7 @@ def run_sam3(
     cache_directory: CacheDirectory = "cache",
     split: Split = "test",
 ) -> None:
-    """SAM 3 (needs HF_TOKEN; facebook/sam3 is gated)."""
+    """SAM 3 (needs HF_TOKEN, facebook/sam3 is gated)."""
     from fishi.segmentation import SamThree
 
     _sweep(SamThree(), data_directory, metrics_directory, cache_directory, split)
@@ -93,7 +93,7 @@ def run_gdino_sam2(
 
 @run_app.command("openworldsam")
 def run_openworldsam(
-    config: Annotated[str, typer.Option(help="OpenWorldSAM detectron2 YAML config")],
+    config_file: Annotated[str, typer.Option(help="OpenWorldSAM detectron2 YAML config")],
     weights: Annotated[str, typer.Option(help="OpenWorldSAM checkpoint path")],
     repo_path: Annotated[str | None, typer.Option(help="OpenWorldSAM repo root")] = None,
     data_directory: DataDirectory = "data",
@@ -101,10 +101,10 @@ def run_openworldsam(
     cache_directory: CacheDirectory = "cache",
     split: Split = "test",
 ) -> None:
-    """OpenWorldSAM (detectron2; needs its repo via --repo-path)."""
+    """OpenWorldSAM (detectron2, needs its repo via --repo-path)."""
     from fishi.segmentation import OpenWorldSam
 
-    pipeline = OpenWorldSam(config, weights, repo_path=repo_path)
+    pipeline = OpenWorldSam(config_file, weights, repo_path=repo_path)
     _sweep(pipeline, data_directory, metrics_directory, cache_directory, split)
 
 
@@ -113,18 +113,19 @@ def report(
     metrics_directory: MetricsDirectory = "metrics",
     csv: Annotated[str | None, typer.Option(help="also write a CSV here")] = None,
 ) -> None:
-    """Aggregate per-cell metrics into a table (pipeline x preprocessing mIoU)."""
-    matrix = to_matrix(metrics_directory)
-    preprocessings = sorted({name for row in matrix.values() for name in row})
-    table = Table(title="mIoU")
-    table.add_column("pipeline", style="bold")
-    for name in preprocessings:
-        table.add_column(name, justify="right")
-    for pipeline in sorted(matrix):
-        row = matrix[pipeline]
-        cells = [f"{row[p]:.3f}" if row.get(p) is not None else "-" for p in preprocessings]
-        table.add_row(pipeline, *cells)
-    console.print(table)
+    """Aggregate per-cell metrics into tables (pipeline x preprocessing, mIoU and mean accuracy)."""
+    for metric, title in (("miou", "mIoU"), ("macc", "mean accuracy")):
+        matrix = to_matrix(metrics_directory, metric)
+        preprocessings = sorted({name for row in matrix.values() for name in row})
+        table = Table(title=title)
+        table.add_column("pipeline", style="bold")
+        for name in preprocessings:
+            table.add_column(name, justify="right")
+        for pipeline in sorted(matrix):
+            row = matrix[pipeline]
+            cells = [f"{row[p]:.3f}" if row.get(p) is not None else "-" for p in preprocessings]
+            table.add_row(pipeline, *cells)
+        console.print(table)
     if csv:
         to_csv(metrics_directory, csv)
         console.print(f"[green]wrote {csv}")
@@ -170,6 +171,32 @@ def demos(
             bgra = cv2.cvtColor(rgba, cv2.COLOR_RGBA2BGRA)
             cv2.imwrite(str(output / f"{sample.stem}_{name}.png"), bgra)
     console.print(f"[green]wrote demos to {output}/")
+
+
+@app.command()
+def diagnose(
+    cache_directory: CacheDirectory = "cache",
+    data_directory: DataDirectory = "data",
+    split: Split = "test",
+) -> None:
+    """Per-cell diagnostics recomputed from the cached predictions (error split, FWIoU, groups)."""
+    dataset = load_split(split, get_settings(data_directory=data_directory))
+    rows = error_decomposition(cache_directory, dataset)
+    table = Table(title="diagnostics")
+    table.add_column("cell", style="bold")
+    for name in ("mIoU", "FWIoU", "things", "stuff", "confused", "missed"):
+        table.add_column(name, justify="right")
+    for cell, values in rows.items():
+        table.add_row(
+            cell,
+            f"{values['miou']:.3f}",
+            f"{values['fwiou']:.3f}",
+            f"{values['things']:.3f}",
+            f"{values['stuff']:.3f}",
+            f"{values['confused']:.3f}",
+            f"{values['missed']:.3f}",
+        )
+    console.print(table)
 
 
 if __name__ == "__main__":

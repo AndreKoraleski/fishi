@@ -6,9 +6,9 @@ from fishi.report import cell_report, load_cells, save_cell, to_csv, to_matrix
 def _metrics():
     return {
         "iou": np.array([np.nan, 0.5]),
-        "dice": np.array([np.nan, 2 / 3]),
+        "accuracy": np.array([np.nan, 1.0]),
         "miou": 0.5,
-        "mdice": 2 / 3,
+        "macc": 1.0,
     }
 
 
@@ -31,22 +31,8 @@ def test_save_cell_and_load_cells(tmp_path):
 def test_to_csv_flattens_cells(tmp_path):
     save_cell(_metrics(), ["void", "road"], "gdino+sam1", "none", tmp_path)
     text = to_csv(tmp_path, tmp_path / "metrics.csv").read_text()
-    assert "pipeline,preprocessing,miou,mdice,iou_void,dice_void,iou_road,dice_road" in text
+    assert "pipeline,preprocessing,miou,macc,iou_void,accuracy_void,iou_road,accuracy_road" in text
     assert "gdino+sam1,none,0.5," in text
-
-
-def test_cell_report_carries_extended_metrics():
-    metrics = {
-        **_metrics(),
-        "pixel_accuracy": 0.9,
-        "mean_accuracy": 0.8,
-        "fwiou": 0.7,
-        "errors": {"correct": 0.6, "confused": 0.3, "missed": 0.1},
-    }
-    report = cell_report(metrics, ["void", "road"], "sam3", "none")
-    assert report["pixel_accuracy"] == 0.9
-    assert report["fwiou"] == 0.7
-    assert report["errors"]["confused"] == 0.3
 
 
 def test_to_matrix_pivots_cells(tmp_path):

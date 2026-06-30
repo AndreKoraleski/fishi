@@ -1,8 +1,8 @@
 """Diagnostic metrics derived from a SegmentationMetrics confusion matrix.
 
-Pixel and per-class accuracy, frequency-weighted IoU, class-group means, and the error breakdown
-(correct vs confused vs missed) that separates classification error from recall. Each takes a
-SegmentationMetrics and reads its confusion matrix.
+Frequency-weighted IoU, class-group means, and the error breakdown (correct vs confused vs missed)
+that separates classification error from recall. Each takes a SegmentationMetrics and reads its
+confusion matrix.
 """
 
 import numpy as np
@@ -16,26 +16,6 @@ def _scored(metrics: SegmentationMetrics) -> np.ndarray:
     if metrics.ignore_index is not None and 0 <= metrics.ignore_index < metrics.class_count:
         mask[metrics.ignore_index] = False
     return mask
-
-
-def pixel_accuracy(metrics: SegmentationMetrics) -> float:
-    """Fraction of scored pixels predicted correctly."""
-    total = float(metrics.confusion.sum())
-    return float(np.diag(metrics.confusion).sum() / total) if total else float("nan")
-
-
-def per_class_accuracy(metrics: SegmentationMetrics) -> np.ndarray:
-    """Per-class recall (correct over target pixels). NaN for classes absent from the target."""
-    support = metrics.confusion.sum(axis=1).astype(np.float64)
-    correct = np.diag(metrics.confusion).astype(np.float64)
-    return np.divide(correct, support, out=np.full_like(correct, np.nan), where=support > 0)
-
-
-def mean_accuracy(metrics: SegmentationMetrics) -> float:
-    """Mean per-class recall over present scored classes."""
-    accuracy = per_class_accuracy(metrics)
-    accuracy[~_scored(metrics)] = np.nan
-    return float(np.nanmean(accuracy))
 
 
 def frequency_weighted_iou(metrics: SegmentationMetrics) -> float:

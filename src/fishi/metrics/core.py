@@ -1,14 +1,14 @@
-"""Segmentation metrics core: per-class and mean IoU and Dice."""
+"""Segmentation metrics core: per-class and mean IoU and accuracy."""
 
 import numpy as np
 
 
 class SegmentationMetrics:
-    """Accumulate predictions and report IoU and Dice, per class and mean.
+    """Accumulate predictions and report IoU and accuracy, per class and mean.
 
-    A single confusion matrix over the classes backs both metrics, so IoU and Dice stay consistent.
-    Call update() per sample, then compute(). The confusion matrix is public, so the diagnostics
-    module derives its richer views (accuracies, error breakdown, and so on) from it.
+    A single confusion matrix over the classes backs both metrics, so IoU and accuracy stay
+    consistent. Call update() per sample, then compute(). The confusion matrix is public, so the
+    diagnostics module derives its richer views (frequency-weighted IoU, error breakdown) from it.
 
     Parameters
     ----------
@@ -52,31 +52,31 @@ class SegmentationMetrics:
         denominator = tp + fp + fn
         return np.divide(tp, denominator, out=np.full_like(tp, np.nan), where=denominator > 0)
 
-    def per_class_dice(self) -> np.ndarray:
-        """Per-class Dice. NaN for classes absent from both prediction and target."""
-        tp, fp, fn = self._tp_fp_fn()
-        denominator = 2 * tp + fp + fn
-        return np.divide(2 * tp, denominator, out=np.full_like(tp, np.nan), where=denominator > 0)
+    def per_class_accuracy(self) -> np.ndarray:
+        """Per-class accuracy (recall). NaN for classes absent from the target."""
+        tp, _, fn = self._tp_fp_fn()
+        support = tp + fn
+        return np.divide(tp, support, out=np.full_like(tp, np.nan), where=support > 0)
 
     def compute(self) -> dict[str, np.ndarray | float]:
-        """Return per-class and mean IoU and Dice.
+        """Return per-class and mean IoU and accuracy.
 
         Returns
         -------
         dict
-            Keys: iou and dice (per-class arrays), miou and mdice (means over classes present in
+            Keys: iou and accuracy (per-class arrays), miou and macc (means over classes present in
                 the data).
         """
         iou = self.per_class_iou()
-        dice = self.per_class_dice()
+        accuracy = self.per_class_accuracy()
         if self.ignore_index is not None and 0 <= self.ignore_index < self.class_count:
             iou[self.ignore_index] = np.nan
-            dice[self.ignore_index] = np.nan
+            accuracy[self.ignore_index] = np.nan
         return {
             "iou": iou,
-            "dice": dice,
-            "miou": float(np.nanmean(iou)),
-            "mdice": float(np.nanmean(dice)),
+            "accuracy": accuracy,
+            "miou": float(np.nanmean(iou)) if np.any(~np.isnan(iou)) else float("nan"),
+            "macc": float(np.nanmean(accuracy)) if np.any(~np.isnan(accuracy)) else float("nan"),
         }
 
     def reset(self) -> None:

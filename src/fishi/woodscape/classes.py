@@ -25,3 +25,10 @@ PROMPTS = {
     for class_id, name in enumerate(CLASS_NAMES)
     if class_id != VOID_ID
 }
+
+# Stuff is amorphous background, things are countable objects. Used to stratify diagnostics.
+STUFF_IDS = [CLASS_NAMES.index(name) for name in ("road", "lanemarks", "curb")]
+THING_IDS = [
+    CLASS_NAMES.index(name)
+    for name in ("person", "rider", "vehicles", "bicycle", "motorcycle", "traffic_sign")
+]

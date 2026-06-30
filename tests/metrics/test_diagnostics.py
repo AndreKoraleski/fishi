@@ -5,16 +5,7 @@ from fishi.metrics import (
     error_breakdown,
     frequency_weighted_iou,
     grouped_miou,
-    mean_accuracy,
-    pixel_accuracy,
 )
-
-
-def test_pixel_and_mean_accuracy():
-    metric = SegmentationMetrics(class_count=2)
-    metric.update(np.array([0, 1, 1, 1]), np.array([0, 0, 1, 1]))
-    assert pixel_accuracy(metric) == 0.75  # 3 of 4 pixels correct
-    np.testing.assert_allclose(mean_accuracy(metric), 0.75)  # recalls 0.5 and 1.0
 
 
 def test_frequency_weighted_iou_weights_by_support():
@@ -36,3 +27,13 @@ def test_grouped_miou_averages_within_groups():
     metric = SegmentationMetrics(class_count=3)
     metric.update(np.array([0, 1, 2]), np.array([0, 1, 2]))
     assert grouped_miou(metric, {"stuff": [0, 1], "things": [2]}) == {"stuff": 1.0, "things": 1.0}
+
+
+def test_frequency_weighted_iou_empty_is_nan():
+    assert np.isnan(frequency_weighted_iou(SegmentationMetrics(class_count=3, ignore_index=0)))
+
+
+def test_grouped_miou_empty_group_is_nan():
+    metric = SegmentationMetrics(class_count=3)
+    metric.update(np.array([0, 1, 2]), np.array([0, 1, 2]))
+    assert np.isnan(grouped_miou(metric, {"empty": []})["empty"])

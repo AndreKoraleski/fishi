@@ -19,24 +19,17 @@ def _finite(value: float) -> float | None:
 def cell_report(metrics: dict, class_names: list[str], pipeline: str, preprocessing: str) -> dict:
     """Build the report dict for one (pipeline, preprocessing) cell."""
     iou = np.asarray(metrics["iou"], dtype=float)
-    dice = np.asarray(metrics["dice"], dtype=float)
+    accuracy = np.asarray(metrics["accuracy"], dtype=float)
     report = {
         "pipeline": pipeline,
         "preprocessing": preprocessing,
         "miou": float(metrics["miou"]),
-        "mdice": float(metrics["mdice"]),
+        "macc": float(metrics["macc"]),
         "per_class": {
-            name: {"iou": _finite(iou[index]), "dice": _finite(dice[index])}
+            name: {"iou": _finite(iou[index]), "accuracy": _finite(accuracy[index])}
             for index, name in enumerate(class_names)
         },
     }
-    for key in ("pixel_accuracy", "mean_accuracy", "fwiou"):
-        if key in metrics:
-            report[key] = _finite(float(metrics[key]))
-    if "errors" in metrics:
-        report["errors"] = {
-            name: _finite(float(value)) for name, value in metrics["errors"].items()
-        }
     return report
 
 
@@ -66,19 +59,19 @@ def to_csv(directory: str | Path, path: str | Path) -> Path:
     """Flatten the metrics directory into one CSV (a row per cell, per-class columns)."""
     cells = load_cells(directory)
     class_names = list(cells[0]["per_class"]) if cells else []
-    fieldnames = ["pipeline", "preprocessing", "miou", "mdice"]
+    fieldnames = ["pipeline", "preprocessing", "miou", "macc"]
     for name in class_names:
-        fieldnames += [f"iou_{name}", f"dice_{name}"]
+        fieldnames += [f"iou_{name}", f"accuracy_{name}"]
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()
         for cell in cells:
-            row = {key: cell[key] for key in ("pipeline", "preprocessing", "miou", "mdice")}
+            row = {key: cell[key] for key in ("pipeline", "preprocessing", "miou", "macc")}
             for name, scores in cell["per_class"].items():
                 row[f"iou_{name}"] = scores["iou"]
-                row[f"dice_{name}"] = scores["dice"]
+                row[f"accuracy_{name}"] = scores["accuracy"]
             writer.writerow(row)
     return path
 

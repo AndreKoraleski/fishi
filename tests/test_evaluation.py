@@ -19,7 +19,7 @@ def test_evaluate_runs_and_returns_metrics(make_sample, fake_dataset):
     dataset = Identity().wrap(fake_dataset([make_sample(), make_sample("00001_RV")]))
     pipeline = CountingPipeline()
     result = evaluate(dataset, pipeline, prompts={1: "road"}, class_count=10)
-    assert {"iou", "dice", "miou", "mdice"} <= set(result)
+    assert {"iou", "accuracy", "miou", "macc"} <= set(result)
     assert result["miou"] == 0.0  # all-void predictions vs road labels
     assert pipeline.calls == 2  # one Identity view per sample, one image at a time
 
@@ -35,6 +35,8 @@ def test_run_returns_the_cell_report(make_sample, fake_dataset):
     assert report["pipeline"] == "dummy"
     assert report["preprocessing"] == "none"
     assert "miou" in report
+    assert "macc" in report  # the cell report carries both challenge metrics
+    assert "accuracy" in report["per_class"]["road"]
 
 
 def test_run_saves_report_and_skips_finished_cell(tmp_path, make_sample, fake_dataset):

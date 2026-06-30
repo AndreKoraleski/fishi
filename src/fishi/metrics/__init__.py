@@ -5,9 +5,6 @@ from fishi.metrics.diagnostics import (
     error_breakdown,
     frequency_weighted_iou,
     grouped_miou,
-    mean_accuracy,
-    per_class_accuracy,
-    pixel_accuracy,
 )
 
 __all__ = [
@@ -15,7 +12,4 @@ __all__ = [
     "error_breakdown",
     "frequency_weighted_iou",
     "grouped_miou",
-    "mean_accuracy",
-    "per_class_accuracy",
-    "pixel_accuracy",
 ]
