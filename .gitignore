@@ -1,51 +1,36 @@
-# Python-generated files
+# Python
 __pycache__/
 *.py[oc]
 build/
 dist/
-wheels/
-*.egg-info
+*.egg-info/
 
-# Virtual environments
-.venv
+# Virtual environment
+.venv/
 
 # Tooling caches
 .mypy_cache/
 .ruff_cache/
 .pytest_cache/
 .coverage
-.coverage.*
 htmlcov/
 
-# Notebooks
+# Jupyter checkpoints
 .ipynb_checkpoints/
 
-# Data, datasets and models (anchored to repo root so they never match source dirs)
+# Dataset (fetched, not committed)
 /data/
-/datasets/
-*.h5
-*.hdf5
-*.npy
-*.npz
-*.pt
-*.pth
-*.ckpt
-*.onnx
 
-# Experiment outputs
-/outputs/
-/runs/
-/logs/
-wandb/
-mlruns/
+# Generated outputs
+cache/
+metrics/
+demos/
+*.npz
+
+# Experiment notebooks
+notebooks/
 
 # OS / editor
 .DS_Store
-.idea/
 .vscode/
-
-# Local demonstration images
-demos/
-
-# experiment notebooks (generated; deployed to Colab manually)
-notebooks/
+.idea/
