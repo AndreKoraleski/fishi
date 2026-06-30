@@ -71,7 +71,3 @@ class OpenWorldSam:
             outputs = self.model(inputs)[0]
         channel = outputs["sem_seg"].argmax(dim=0).cpu().numpy()
         return np.asarray(class_ids, dtype=np.uint8)[channel]
-
-    def predict_batch(self, images: list[np.ndarray], prompts: dict[int, str]) -> list[np.ndarray]:
-        """Segment each image in turn. OWS's SAM2 forward doesn't batch reliably."""
-        return [self.predict(image, prompts) for image in images]

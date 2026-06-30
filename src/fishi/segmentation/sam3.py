@@ -8,7 +8,9 @@ from fishi.segmentation.semantic import semantic_from_instances
 
 
 def repeat_batch(value, n, torch):
-    """Repeat a vision-feature field (a tensor, or a nested tuple/list) along the batch dim."""
+    """Repeat a vision-feature field (a tensor, or a nested tuple/list) along the batch
+    dimension.
+    """
     if torch.is_tensor(value):
         return value.repeat(n, *([1] * (value.dim() - 1)))
     if isinstance(value, (tuple, list)):
@@ -88,7 +90,3 @@ class SamThree:
                 out_class_ids.append(class_id)
                 scores.append(float(score))
         return semantic_from_instances(masks, out_class_ids, scores, image.shape[:2])
-
-    def predict_batch(self, images: list[np.ndarray], prompts: dict[int, str]) -> list[np.ndarray]:
-        """Segment each image in turn (all concepts are batched within a single image)."""
-        return [self.predict(image, prompts) for image in images]

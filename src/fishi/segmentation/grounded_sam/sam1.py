@@ -1,7 +1,7 @@
 # pyright: reportMissingImports=false, reportArgumentType=false, reportCallIssue=false
 """Grounded SAM 1: Grounding DINO boxes segmented by SAM 1 (facebook/sam-vit-huge)."""
 
-from fishi.segmentation.grounded_sam.base import GroundedSAM, pad_boxes
+from fishi.segmentation.grounded_sam.base import GroundedSAM
 
 
 class GroundedSam1(GroundedSAM):
@@ -20,10 +20,10 @@ class GroundedSam1(GroundedSAM):
             .eval()
         )
 
-    def segment(self, pil_images, boxes):
+    def segment(self, pil_image, boxes):
         torch = self._torch
         inputs = self.segmenter_processor(
-            pil_images, input_boxes=pad_boxes(boxes), return_tensors="pt"
+            pil_image, input_boxes=[boxes.tolist()], return_tensors="pt"
         ).to(self.device)
         inputs["pixel_values"] = inputs["pixel_values"].to(self._segmenter_dtype)
         inputs["input_boxes"] = inputs["input_boxes"].to(self._segmenter_dtype)
@@ -35,4 +35,4 @@ class GroundedSam1(GroundedSAM):
             inputs["reshaped_input_sizes"].cpu(),
         )
         best = outputs.iou_scores.float().cpu().argmax(dim=-1)
-        return [(masks[index], best[index]) for index in range(len(pil_images))]
+        return masks[0], best[0]

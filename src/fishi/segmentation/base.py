@@ -6,12 +6,8 @@ import numpy as np
 
 
 class SegmentationPipeline(Protocol):
-    """Produces a semantic label map from an image and per-id text prompts."""
+    """Produces a semantic label map from an image and per-id text prompts, one image at a time."""
 
     name: str
 
     def predict(self, image: np.ndarray, prompts: dict[int, str]) -> np.ndarray: ...
-
-    def predict_batch(
-        self, images: list[np.ndarray], prompts: dict[int, str]
-    ) -> list[np.ndarray]: ...
