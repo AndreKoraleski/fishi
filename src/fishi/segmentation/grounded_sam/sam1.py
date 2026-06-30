@@ -1,10 +1,10 @@
 # pyright: reportMissingImports=false, reportArgumentType=false, reportCallIssue=false
 """Grounded SAM 1: Grounding DINO boxes segmented by SAM 1 (facebook/sam-vit-huge)."""
 
-from fishi.segmentation.grounded_sam.base import GroundedSAM
+from fishi.segmentation.grounded_sam.base import GroundedSam
 
 
-class GroundedSam1(GroundedSAM):
+class GroundedSam1(GroundedSam):
     """Grounding DINO + SAM 1."""
 
     name = "gdino+sam1"

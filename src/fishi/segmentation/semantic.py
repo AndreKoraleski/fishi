@@ -6,16 +6,21 @@ import numpy as np
 def match_label(text_label: str, prompt_to_id: dict[str, int]) -> int | None:
     """Map a detector's returned text label back to a class id.
 
-    Tries an exact (case-insensitive) match first, then a substring match, since open-set detectors
-    may return partial or merged label text.
+    Tries an exact (case-insensitive) match first. Failing that, since open-set detectors may
+    return partial or merged text, it falls back to the most specific (longest) prompt that overlaps
+    the label, so a generic prompt cannot shadow a more specific one.
     """
     text = text_label.strip().lower()
     for prompt, class_id in prompt_to_id.items():
         if text == prompt.lower():
             return class_id
-    for prompt, class_id in prompt_to_id.items():
-        if prompt.lower() in text or text in prompt.lower():
-            return class_id
+    overlaps = [
+        (prompt, class_id)
+        for prompt, class_id in prompt_to_id.items()
+        if prompt.lower() in text or text in prompt.lower()
+    ]
+    if overlaps:
+        return max(overlaps, key=lambda item: len(item[0]))[1]
     return None
 
 

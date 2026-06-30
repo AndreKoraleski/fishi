@@ -69,5 +69,7 @@ class OpenWorldSam:
         inputs = build_inference_inputs(sam_tensor, beit_tensor, height, width, texts, category_ids)
         with torch.no_grad(), torch.autocast(self.device, dtype=torch.bfloat16):
             outputs = self.model(inputs)[0]
+        # Dense and forced-choice: argmax over the prompted classes assigns every pixel a
+        # foreground class, so this pipeline never predicts void, unlike the box-based ones.
         channel = outputs["sem_seg"].argmax(dim=0).cpu().numpy()
         return np.asarray(class_ids, dtype=np.uint8)[channel]

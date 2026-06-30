@@ -14,7 +14,7 @@ from PIL import Image
 from fishi.segmentation.semantic import match_label, semantic_from_instances
 
 
-class GroundedSAM(ABC):
+class GroundedSam(ABC):
     """Grounding DINO detection plus a SAM segmenter, producing a semantic map per image."""
 
     name = "gdino+sam"
